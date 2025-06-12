@@ -14,6 +14,7 @@ export class TokenModel {
   @Required() public readonly name: string;
   @Required() public readonly permanent_delegate: string | null;
   @Required() public readonly symbol: string;
+  @Required() public readonly network: string;
   @Required() @CollectionOf(String) public readonly tags: string[];
   @Required() public readonly created_at: Date;
   @Required() public readonly updated_at: Date | null;

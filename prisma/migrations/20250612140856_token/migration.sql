@@ -12,6 +12,7 @@ CREATE TABLE "token" (
     "name" VARCHAR NOT NULL,
     "permanent_delegate" VARCHAR,
     "symbol" VARCHAR NOT NULL,
+    "network" VARCHAR NOT NULL,
     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "expiry" TIMESTAMP(6),
     "created_at" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -903,6 +903,7 @@ export namespace Prisma {
     name: string | null
     permanent_delegate: string | null
     symbol: string | null
+    network: string | null
     expiry: Date | null
     created_at: Date | null
     updated_at: Date | null
@@ -921,6 +922,7 @@ export namespace Prisma {
     name: string | null
     permanent_delegate: string | null
     symbol: string | null
+    network: string | null
     expiry: Date | null
     created_at: Date | null
     updated_at: Date | null
@@ -940,6 +942,7 @@ export namespace Prisma {
     name: number
     permanent_delegate: number
     symbol: number
+    network: number
     tags: number
     expiry: number
     created_at: number
@@ -971,6 +974,7 @@ export namespace Prisma {
     name?: true
     permanent_delegate?: true
     symbol?: true
+    network?: true
     expiry?: true
     created_at?: true
     updated_at?: true
@@ -989,6 +993,7 @@ export namespace Prisma {
     name?: true
     permanent_delegate?: true
     symbol?: true
+    network?: true
     expiry?: true
     created_at?: true
     updated_at?: true
@@ -1008,6 +1013,7 @@ export namespace Prisma {
     name?: true
     permanent_delegate?: true
     symbol?: true
+    network?: true
     tags?: true
     expiry?: true
     created_at?: true
@@ -1115,6 +1121,7 @@ export namespace Prisma {
     name: string
     permanent_delegate: string | null
     symbol: string
+    network: string
     tags: string[]
     expiry: Date | null
     created_at: Date
@@ -1154,6 +1161,7 @@ export namespace Prisma {
     name?: boolean
     permanent_delegate?: boolean
     symbol?: boolean
+    network?: boolean
     tags?: boolean
     expiry?: boolean
     created_at?: boolean
@@ -1174,6 +1182,7 @@ export namespace Prisma {
     name?: boolean
     permanent_delegate?: boolean
     symbol?: boolean
+    network?: boolean
     tags?: boolean
     expiry?: boolean
     created_at?: boolean
@@ -1194,6 +1203,7 @@ export namespace Prisma {
     name?: boolean
     permanent_delegate?: boolean
     symbol?: boolean
+    network?: boolean
     tags?: boolean
     expiry?: boolean
     created_at?: boolean
@@ -1214,6 +1224,7 @@ export namespace Prisma {
     name?: boolean
     permanent_delegate?: boolean
     symbol?: boolean
+    network?: boolean
     tags?: boolean
     expiry?: boolean
     created_at?: boolean
@@ -1221,7 +1232,7 @@ export namespace Prisma {
     deleted_at?: boolean
   }
 
-  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "daily_volume" | "decimals" | "extensions" | "freeze_authority" | "logo_uri" | "mint_authority" | "minted_at" | "name" | "permanent_delegate" | "symbol" | "tags" | "expiry" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["token"]>
+  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "daily_volume" | "decimals" | "extensions" | "freeze_authority" | "logo_uri" | "mint_authority" | "minted_at" | "name" | "permanent_delegate" | "symbol" | "network" | "tags" | "expiry" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["token"]>
 
   export type $TokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Token"
@@ -1239,6 +1250,7 @@ export namespace Prisma {
       name: string
       permanent_delegate: string | null
       symbol: string
+      network: string
       tags: string[]
       expiry: Date | null
       created_at: Date
@@ -1679,6 +1691,7 @@ export namespace Prisma {
     readonly name: FieldRef<"Token", 'String'>
     readonly permanent_delegate: FieldRef<"Token", 'String'>
     readonly symbol: FieldRef<"Token", 'String'>
+    readonly network: FieldRef<"Token", 'String'>
     readonly tags: FieldRef<"Token", 'String[]'>
     readonly expiry: FieldRef<"Token", 'DateTime'>
     readonly created_at: FieldRef<"Token", 'DateTime'>
@@ -2077,6 +2090,7 @@ export namespace Prisma {
     name: 'name',
     permanent_delegate: 'permanent_delegate',
     symbol: 'symbol',
+    network: 'network',
     tags: 'tags',
     expiry: 'expiry',
     created_at: 'created_at',
@@ -2221,6 +2235,7 @@ export namespace Prisma {
     name?: StringFilter<"Token"> | string
     permanent_delegate?: StringNullableFilter<"Token"> | string | null
     symbol?: StringFilter<"Token"> | string
+    network?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     expiry?: DateTimeNullableFilter<"Token"> | Date | string | null
     created_at?: DateTimeFilter<"Token"> | Date | string
@@ -2241,6 +2256,7 @@ export namespace Prisma {
     name?: SortOrder
     permanent_delegate?: SortOrderInput | SortOrder
     symbol?: SortOrder
+    network?: SortOrder
     tags?: SortOrder
     expiry?: SortOrderInput | SortOrder
     created_at?: SortOrder
@@ -2264,6 +2280,7 @@ export namespace Prisma {
     name?: StringFilter<"Token"> | string
     permanent_delegate?: StringNullableFilter<"Token"> | string | null
     symbol?: StringFilter<"Token"> | string
+    network?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     expiry?: DateTimeNullableFilter<"Token"> | Date | string | null
     created_at?: DateTimeFilter<"Token"> | Date | string
@@ -2284,6 +2301,7 @@ export namespace Prisma {
     name?: SortOrder
     permanent_delegate?: SortOrderInput | SortOrder
     symbol?: SortOrder
+    network?: SortOrder
     tags?: SortOrder
     expiry?: SortOrderInput | SortOrder
     created_at?: SortOrder
@@ -2312,6 +2330,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"Token"> | string
     permanent_delegate?: StringNullableWithAggregatesFilter<"Token"> | string | null
     symbol?: StringWithAggregatesFilter<"Token"> | string
+    network?: StringWithAggregatesFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     expiry?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
     created_at?: DateTimeWithAggregatesFilter<"Token"> | Date | string
@@ -2332,6 +2351,7 @@ export namespace Prisma {
     name: string
     permanent_delegate?: string | null
     symbol: string
+    network: string
     tags?: TokenCreatetagsInput | string[]
     expiry?: Date | string | null
     created_at?: Date | string
@@ -2352,6 +2372,7 @@ export namespace Prisma {
     name: string
     permanent_delegate?: string | null
     symbol: string
+    network: string
     tags?: TokenCreatetagsInput | string[]
     expiry?: Date | string | null
     created_at?: Date | string
@@ -2372,6 +2393,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
+    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2392,6 +2414,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
+    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2412,6 +2435,7 @@ export namespace Prisma {
     name: string
     permanent_delegate?: string | null
     symbol: string
+    network: string
     tags?: TokenCreatetagsInput | string[]
     expiry?: Date | string | null
     created_at?: Date | string
@@ -2432,6 +2456,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
+    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2452,6 +2477,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
+    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -2594,6 +2620,7 @@ export namespace Prisma {
     name?: SortOrder
     permanent_delegate?: SortOrder
     symbol?: SortOrder
+    network?: SortOrder
     tags?: SortOrder
     expiry?: SortOrder
     created_at?: SortOrder
@@ -2618,6 +2645,7 @@ export namespace Prisma {
     name?: SortOrder
     permanent_delegate?: SortOrder
     symbol?: SortOrder
+    network?: SortOrder
     expiry?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
@@ -2636,6 +2664,7 @@ export namespace Prisma {
     name?: SortOrder
     permanent_delegate?: SortOrder
     symbol?: SortOrder
+    network?: SortOrder
     expiry?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder

@@ -15,6 +15,7 @@
     "start": "cross-env NODE_ENV=production node --import @swc-node/register/esm-register src/index.ts",
     "test": "yarn run test:lint",
     "prisma:migrate": "npx prisma migrate dev && yarn prisma:generate",
+    "prisma:migrate:reset": "npx prisma migrate reset",
     "prisma:generate": "npx prisma generate",
     "test:lint": "eslint",
     "test:lint:fix": "eslint --fix",
@@ -23,6 +24,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
+    "@solana/web3.js": "^1.98.2",
     "@swc-node/register": "^1.10.10",
     "@swc/cli": "^0.7.5",
     "@swc/core": "^1.11.24",

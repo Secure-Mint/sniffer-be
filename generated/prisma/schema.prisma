@@ -31,6 +31,7 @@ model Token {
   name               String    @db.VarChar
   permanent_delegate String?   @db.VarChar
   symbol             String    @db.VarChar
+  network            String    @db.VarChar
   tags               String[]  @default([]) // PostgreSQL 'text[]' column
   expiry             DateTime? @db.Timestamp(6)
   created_at         DateTime  @default(now()) @db.Timestamp(6)

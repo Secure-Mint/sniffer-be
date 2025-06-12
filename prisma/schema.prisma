@@ -19,27 +19,28 @@ generator tsed {
 }
 
 model Token {
-  id    String  @unique    @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  address String @unique @db.VarChar
-  daily_volume Float? @db.DoublePrecision
-  decimals Int @db.Integer
-  extensions Json
-  freeze_authority String? @db.VarChar
-  logo_uri String? @db.VarChar
-  mint_authority String? @db.VarChar
-  minted_at DateTime?
-  name String @db.VarChar
-  permanent_delegate String? @db.VarChar
-  symbol String @db.VarChar
-  tags String[] @default([]) // PostgreSQL 'text[]' column
-  expiry DateTime? @db.Timestamp(6)
-  created_at DateTime @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-  deleted_at DateTime? @db.Timestamp(6)
+  id                 String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  address            String    @unique @db.VarChar
+  daily_volume       Float?    @db.DoublePrecision
+  decimals           Int       @db.Integer
+  extensions         Json
+  freeze_authority   String?   @db.VarChar
+  logo_uri           String?   @db.VarChar
+  mint_authority     String?   @db.VarChar
+  minted_at          DateTime?
+  name               String    @db.VarChar
+  permanent_delegate String?   @db.VarChar
+  symbol             String    @db.VarChar
+  network            String    @db.VarChar
+  tags               String[]  @default([]) // PostgreSQL 'text[]' column
+  expiry             DateTime? @db.Timestamp(6)
+  created_at         DateTime  @default(now()) @db.Timestamp(6)
+  updated_at         DateTime? @updatedAt @db.Timestamp(6)
+  deleted_at         DateTime? @db.Timestamp(6)
 
-  @@map("token")
   @@index([tags], type: Gin)
   @@index([created_at(sort: Desc)])
   @@index([updated_at(sort: Desc)])
   @@index([minted_at(sort: Desc)])
+  @@map("token")
 }

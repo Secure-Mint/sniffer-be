@@ -82,6 +82,5 @@ const hasTokenChanged = (
     console.log("REMAINING TOKENS ...", allTokens.length, "\n");
   }
 
-  await tokenService.deletedExpired();
-  console.log("SOFT DELETED EXPIRED TOKENS ...\n");
+  console.log("CRON TASKS COMPLETED ...\n");
 })();
