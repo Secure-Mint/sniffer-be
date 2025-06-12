@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>jupiter-api-enhanced</h1>
+  <h1>token sniffer</h1>
 </div>
 
 ## Getting started
