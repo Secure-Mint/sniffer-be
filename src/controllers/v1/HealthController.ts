@@ -5,6 +5,6 @@ import { Get } from "@tsed/schema";
 export class HealthController {
   @Get("/")
   get() {
-    return "I am alive and well!";
+    return "Sniffer is alive and well!";
   }
 }

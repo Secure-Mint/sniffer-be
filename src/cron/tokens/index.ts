@@ -1,6 +1,6 @@
 import { Prisma, PrismaPromise, Token } from "generated/prisma";
 import { TokenService } from "../../services/TokenService";
-import { makeRequest, RequestData } from "../../utils";
+import { makeRequest, RequestData, SOL } from "../../utils";
 import { addMinutes } from "date-fns";
 import { TokenModel } from "../../models";
 import { prisma } from "../../services/PrismaService";
@@ -48,6 +48,7 @@ const hasTokenChanged = (
           prisma.token.create({
             data: {
               ...fetchedToken,
+              network: SOL,
               tags: fetchedToken.tags.filter((item) => item !== "unknown"),
               extensions: fetchedToken.extensions as unknown as Prisma.JsonObject,
               expiry: addMinutes(new Date(), tokenExpiryInMinutes),

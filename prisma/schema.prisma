@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -32,7 +26,7 @@ model Token {
   permanent_delegate String?   @db.VarChar
   symbol             String    @db.VarChar
   network            String    @db.VarChar
-  tags               String[]  @default([]) // PostgreSQL 'text[]' column
+  tags               String[]  @default([])
   expiry             DateTime? @db.Timestamp(6)
   created_at         DateTime  @default(now()) @db.Timestamp(6)
   updated_at         DateTime? @updatedAt @db.Timestamp(6)
@@ -43,4 +37,21 @@ model Token {
   @@index([updated_at(sort: Desc)])
   @@index([minted_at(sort: Desc)])
   @@map("token")
+}
+
+model Platform {
+  id               String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  platform_id      String    @db.VarChar
+  chain_identifier Int?      @db.Integer
+  name             String    @db.VarChar
+  shortname        String?   @db.VarChar
+  native_coin_id   String?   @db.VarChar
+  images           Json
+  created_at       DateTime  @default(now()) @db.Timestamp(6)
+  updated_at       DateTime? @updatedAt @db.Timestamp(6)
+  deleted_at       DateTime? @db.Timestamp(6)
+
+  @@index([created_at(sort: Desc)])
+  @@index([updated_at(sort: Desc)])
+  @@map("platform")
 }
