@@ -1,37 +1,99 @@
-import { Prisma, PrismaPromise, Token } from "generated/prisma";
+import { Prisma, PrismaPromise } from "generated/prisma";
 import { TokenService } from "../../services/TokenService";
+import { PlatformService } from "../../services/PlatformService";
 import { makeRequest, RequestData, SOL } from "../../utils";
-import { addMinutes } from "date-fns";
-import { TokenModel } from "../../models";
 import { prisma } from "../../services/PrismaService";
-import { isDeepStrictEqual } from "util";
+import { TokenMetadata } from "../../models";
 
 const tokenService = new TokenService();
+const platformService = new PlatformService();
 
-const tokensURL = "https://lite-api.jup.ag/tokens/v1/all";
+const jupiterTokensURL = "https://lite-api.jup.ag/tokens/v1/all";
+const coinGeckoTokensURL = "https://api.coingecko.com/api/v3/coins/list";
+const coinGeckoPlatformsURL = "https://api.coingecko.com/api/v3/asset_platforms";
 
-const hasTokenChanged = (
-  { expiry: expiry_db, updated_at: updated_at_db, deleted_at: deleted_at_db, ...dbToken }: Token,
-  { updated_at: updated_at_fet, deleted_at: deleted_at_fet, ...fetchedToken }: TokenModel
-) => {
-  return isDeepStrictEqual(dbToken, fetchedToken);
-};
+const chunkSize = 100;
 
-(async () => {
-  console.log("FETCHING TOKENS ...");
-
-  const chunkSize = 100;
-  const tokenExpiryInMinutes = 60;
-  const request: RequestData = {
-    url: tokensURL,
+const fetchJupiterTokens = async () => {
+  console.log("FETCHING TOKENS FROM JUPITER ...");
+  const jupiterRequest: RequestData = {
+    url: jupiterTokensURL,
     method: "GET"
   };
-  const allTokens = await makeRequest(request);
-  console.log("TOTAL tokens", allTokens.length);
+  const list = await makeRequest(jupiterRequest);
+  console.log(`TOTAL JUPITER TOKENS: , ${list.length} \n`);
+  return list;
+};
 
-  while (allTokens.length) {
+const fetchCoingeckoTokens = async () => {
+  console.log("FETCHING TOKENS FROM COINGECKO ...");
+  const coinGeckoRequest: RequestData = {
+    url: coinGeckoTokensURL,
+    method: "GET",
+    headers: { "x-cg-demo-api-key": process.env.COIN_GECKO_API_KEY },
+    query: { include_platform: true }
+  };
+  const list = await makeRequest(coinGeckoRequest);
+  console.log(`TOTAL COIN GECKO TOKENS: ${list.length} \n`);
+  const filtered = list.filter((x: any) => Boolean(x.platforms.solana));
+  console.log(`TOTAL SOLANA TOKENS ON COIN GECKO: ${filtered.length} \n`);
+  return filtered;
+};
+
+const fetchCoingeckoPlatforms = async () => {
+  console.log("FETCHING PLATFORMS FROM COINGECKO ...");
+  const coinGeckoRequest: RequestData = {
+    url: coinGeckoPlatformsURL,
+    method: "GET",
+    headers: { "x-cg-demo-api-key": process.env.COIN_GECKO_API_KEY }
+  };
+  const list = await makeRequest(coinGeckoRequest);
+  console.log(`TOTAL COIN GECKO PLATFORMS: ${list.length} \n`);
+  return list;
+};
+
+const fetchAndSavePlatforms = async () => {
+  const allCoinGeckoPlatforms = await fetchCoingeckoPlatforms();
+
+  while (allCoinGeckoPlatforms.length) {
     const prismaPromises: PrismaPromise<any>[] = [];
-    const tokens: TokenModel[] = allTokens.splice(0, chunkSize).map(({ logoURI, ...rest }: any) => {
+    const platforms = allCoinGeckoPlatforms.splice(0, chunkSize).map((platform: any) => {
+      return {
+        id: platform.id,
+        chain_identifier: platform.chain_identifier || 0,
+        name: platform.name,
+        shortname: platform.shortname,
+        native_coin_id: platform.native_coin_id,
+        images: platform.image
+      };
+    });
+
+    for (let index = 0; index < platforms.length; index++) {
+      const platform = platforms[index];
+
+      const dbPlatform = await platformService.findById(platform.id);
+      if (!dbPlatform) {
+        prismaPromises.push(
+          prisma.platform.create({
+            data: platform
+          })
+        );
+      }
+
+      await Promise.all(prismaPromises);
+      console.log("SAVED PLATFORMS ...", platforms.length);
+      console.log("REMAINING PLATFORMS ...", allCoinGeckoPlatforms.length, "\n");
+    }
+  }
+};
+
+const fetchAndSaveTokens = async () => {
+  const allCoinGeckoTokens: any[] = await fetchCoingeckoTokens();
+  const allJupiterTokens: any[] = await fetchJupiterTokens();
+
+  while (allJupiterTokens.length) {
+    const prismaPromises: PrismaPromise<any>[] = [];
+    const jupiterTokens = allJupiterTokens.splice(0, chunkSize).map(({ logoURI, ...rest }: any) => {
       return {
         ...rest,
         symbol: rest.symbol.toUpperCase(),
@@ -39,49 +101,73 @@ const hasTokenChanged = (
       };
     });
 
-    for (let index = 0; index < tokens.length; index++) {
-      const fetchedToken = tokens[index];
-      const dbToken = await tokenService.findByAddress(fetchedToken.address);
+    for (let index = 0; index < jupiterTokens.length; index++) {
+      const fetchedJupiterToken = jupiterTokens[index];
+      const dbToken = await tokenService.findByAddress(fetchedJupiterToken.address);
+      const tokenMetadata = dbToken?.metadata as unknown as TokenMetadata;
+      const coinGeckoVerified = Boolean(allCoinGeckoTokens.find((x) => x.id === fetchedJupiterToken?.extensions?.coingeckoId));
 
       if (!dbToken) {
+        const metadata = {
+          coin_gecko_id: fetchedJupiterToken?.extensions?.coingeckoId || null,
+          coin_gecko_verified: coinGeckoVerified,
+          impersonated: !coinGeckoVerified,
+          decimals: fetchedJupiterToken?.decimals || 0,
+          freeze_authority: fetchedJupiterToken?.freeze_authority || null,
+          mint_authority: fetchedJupiterToken?.mint_authority || null,
+          minted_at: fetchedJupiterToken?.minted_at || null,
+          permanent_delegate: fetchedJupiterToken?.permanent_delegate || null,
+          daily_volume: fetchedJupiterToken?.daily_volume || 0
+        };
         prismaPromises.push(
           prisma.token.create({
             data: {
-              ...fetchedToken,
-              network: SOL,
-              tags: fetchedToken.tags.filter((item) => item !== "unknown"),
-              extensions: fetchedToken.extensions as unknown as Prisma.JsonObject,
-              expiry: addMinutes(new Date(), tokenExpiryInMinutes),
-              created_at: new Date(fetchedToken.created_at),
-              updated_at: new Date(fetchedToken.created_at),
+              address: fetchedJupiterToken.address,
+              name: fetchedJupiterToken.name,
+              symbol: fetchedJupiterToken.symbol.toUpperCase(),
+              logo_uri: fetchedJupiterToken.logo_uri,
+              platformId: "solana",
+              tags: fetchedJupiterToken.tags.filter((item: string) => item !== "unknown"),
+              metadata: metadata as unknown as Prisma.JsonObject,
+              created_at: new Date(fetchedJupiterToken.created_at),
+              updated_at: new Date(fetchedJupiterToken.created_at),
               deleted_at: null
             }
           })
         );
-      } else if (hasTokenChanged({ ...dbToken, extensions: dbToken.extensions as unknown as Prisma.JsonObject }, fetchedToken)) {
-        prisma.token.update({
-          where: { address: fetchedToken.address },
-          data: {
-            ...fetchedToken,
-            extensions: fetchedToken.extensions as unknown as Prisma.JsonObject,
-            expiry: addMinutes(new Date(dbToken.expiry || new Date()), tokenExpiryInMinutes),
-            updated_at: new Date()
-          }
-        });
-      } else {
-        prisma.token.update({
-          where: { address: fetchedToken.address },
-          data: {
-            expiry: addMinutes(new Date(dbToken.expiry || new Date()), tokenExpiryInMinutes)
-          }
-        });
+      } else if (tokenMetadata.coin_gecko_verified != coinGeckoVerified) {
+        prismaPromises.push(
+          prisma.token.update({
+            where: { id: dbToken.id },
+            data: {
+              logo_uri: fetchedJupiterToken.logo_uri,
+              metadata: { ...tokenMetadata, coin_gecko_verified: coinGeckoVerified, impersonated: !coinGeckoVerified },
+              updated_at: new Date()
+            }
+          })
+        );
+      } else if (fetchedJupiterToken.extensions?.coingeckoId !== tokenMetadata.coin_gecko_id) {
+        prismaPromises.push(
+          prisma.token.update({
+            where: { id: dbToken.id },
+            data: {
+              logo_uri: fetchedJupiterToken.logo_uri,
+              metadata: { ...tokenMetadata, coin_gecko_id: fetchedJupiterToken.extensions?.coingeckoId || null },
+              updated_at: new Date()
+            }
+          })
+        );
       }
     }
 
-    await prisma.$transaction(prismaPromises);
-    console.log("SAVED TOKENS ...", tokens.length);
-    console.log("REMAINING TOKENS ...", allTokens.length, "\n");
+    await Promise.all(prismaPromises);
+    console.log("SAVED TOKENS ...", jupiterTokens.length);
+    console.log("REMAINING TOKENS ...", allJupiterTokens.length, "\n");
   }
+};
 
+(async () => {
+  await fetchAndSavePlatforms();
+  await fetchAndSaveTokens();
   console.log("CRON TASKS COMPLETED ...\n");
 })();

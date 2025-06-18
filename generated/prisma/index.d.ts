@@ -955,6 +955,36 @@ export namespace Prisma {
    */
 
 
+  /**
+   * Count Type PlatformCountOutputType
+   */
+
+  export type PlatformCountOutputType = {
+    Token: number
+  }
+
+  export type PlatformCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Token?: boolean | PlatformCountOutputTypeCountTokenArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PlatformCountOutputType without action
+   */
+  export type PlatformCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlatformCountOutputType
+     */
+    select?: PlatformCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PlatformCountOutputType without action
+   */
+  export type PlatformCountOutputTypeCountTokenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TokenWhereInput
+  }
+
 
   /**
    * Models
@@ -966,150 +996,86 @@ export namespace Prisma {
 
   export type AggregateToken = {
     _count: TokenCountAggregateOutputType | null
-    _avg: TokenAvgAggregateOutputType | null
-    _sum: TokenSumAggregateOutputType | null
     _min: TokenMinAggregateOutputType | null
     _max: TokenMaxAggregateOutputType | null
-  }
-
-  export type TokenAvgAggregateOutputType = {
-    daily_volume: number | null
-    decimals: number | null
-  }
-
-  export type TokenSumAggregateOutputType = {
-    daily_volume: number | null
-    decimals: number | null
   }
 
   export type TokenMinAggregateOutputType = {
     id: string | null
     address: string | null
-    daily_volume: number | null
-    decimals: number | null
-    freeze_authority: string | null
     logo_uri: string | null
-    mint_authority: string | null
-    minted_at: Date | null
     name: string | null
-    permanent_delegate: string | null
     symbol: string | null
-    network: string | null
-    expiry: Date | null
     created_at: Date | null
     updated_at: Date | null
     deleted_at: Date | null
+    platformId: string | null
   }
 
   export type TokenMaxAggregateOutputType = {
     id: string | null
     address: string | null
-    daily_volume: number | null
-    decimals: number | null
-    freeze_authority: string | null
     logo_uri: string | null
-    mint_authority: string | null
-    minted_at: Date | null
     name: string | null
-    permanent_delegate: string | null
     symbol: string | null
-    network: string | null
-    expiry: Date | null
     created_at: Date | null
     updated_at: Date | null
     deleted_at: Date | null
+    platformId: string | null
   }
 
   export type TokenCountAggregateOutputType = {
     id: number
     address: number
-    daily_volume: number
-    decimals: number
-    extensions: number
-    freeze_authority: number
     logo_uri: number
-    mint_authority: number
-    minted_at: number
     name: number
-    permanent_delegate: number
     symbol: number
-    network: number
     tags: number
-    expiry: number
+    metadata: number
     created_at: number
     updated_at: number
     deleted_at: number
+    platformId: number
     _all: number
   }
 
 
-  export type TokenAvgAggregateInputType = {
-    daily_volume?: true
-    decimals?: true
-  }
-
-  export type TokenSumAggregateInputType = {
-    daily_volume?: true
-    decimals?: true
-  }
-
   export type TokenMinAggregateInputType = {
     id?: true
     address?: true
-    daily_volume?: true
-    decimals?: true
-    freeze_authority?: true
     logo_uri?: true
-    mint_authority?: true
-    minted_at?: true
     name?: true
-    permanent_delegate?: true
     symbol?: true
-    network?: true
-    expiry?: true
     created_at?: true
     updated_at?: true
     deleted_at?: true
+    platformId?: true
   }
 
   export type TokenMaxAggregateInputType = {
     id?: true
     address?: true
-    daily_volume?: true
-    decimals?: true
-    freeze_authority?: true
     logo_uri?: true
-    mint_authority?: true
-    minted_at?: true
     name?: true
-    permanent_delegate?: true
     symbol?: true
-    network?: true
-    expiry?: true
     created_at?: true
     updated_at?: true
     deleted_at?: true
+    platformId?: true
   }
 
   export type TokenCountAggregateInputType = {
     id?: true
     address?: true
-    daily_volume?: true
-    decimals?: true
-    extensions?: true
-    freeze_authority?: true
     logo_uri?: true
-    mint_authority?: true
-    minted_at?: true
     name?: true
-    permanent_delegate?: true
     symbol?: true
-    network?: true
     tags?: true
-    expiry?: true
+    metadata?: true
     created_at?: true
     updated_at?: true
     deleted_at?: true
+    platformId?: true
     _all?: true
   }
 
@@ -1151,18 +1117,6 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Select which fields to average
-    **/
-    _avg?: TokenAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: TokenSumAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
      * Select which fields to find the minimum value
     **/
     _min?: TokenMinAggregateInputType
@@ -1193,8 +1147,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: TokenCountAggregateInputType | true
-    _avg?: TokenAvgAggregateInputType
-    _sum?: TokenSumAggregateInputType
     _min?: TokenMinAggregateInputType
     _max?: TokenMaxAggregateInputType
   }
@@ -1202,25 +1154,16 @@ export namespace Prisma {
   export type TokenGroupByOutputType = {
     id: string
     address: string
-    daily_volume: number | null
-    decimals: number
-    extensions: JsonValue
-    freeze_authority: string | null
     logo_uri: string | null
-    mint_authority: string | null
-    minted_at: Date | null
     name: string
-    permanent_delegate: string | null
     symbol: string
-    network: string
     tags: string[]
-    expiry: Date | null
+    metadata: JsonValue
     created_at: Date
     updated_at: Date | null
     deleted_at: Date | null
+    platformId: string | null
     _count: TokenCountAggregateOutputType | null
-    _avg: TokenAvgAggregateOutputType | null
-    _sum: TokenSumAggregateOutputType | null
     _min: TokenMinAggregateOutputType | null
     _max: TokenMaxAggregateOutputType | null
   }
@@ -1242,111 +1185,90 @@ export namespace Prisma {
   export type TokenSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    daily_volume?: boolean
-    decimals?: boolean
-    extensions?: boolean
-    freeze_authority?: boolean
     logo_uri?: boolean
-    mint_authority?: boolean
-    minted_at?: boolean
     name?: boolean
-    permanent_delegate?: boolean
     symbol?: boolean
-    network?: boolean
     tags?: boolean
-    expiry?: boolean
+    metadata?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
+    platformId?: boolean
+    platform?: boolean | Token$platformArgs<ExtArgs>
   }, ExtArgs["result"]["token"]>
 
   export type TokenSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    daily_volume?: boolean
-    decimals?: boolean
-    extensions?: boolean
-    freeze_authority?: boolean
     logo_uri?: boolean
-    mint_authority?: boolean
-    minted_at?: boolean
     name?: boolean
-    permanent_delegate?: boolean
     symbol?: boolean
-    network?: boolean
     tags?: boolean
-    expiry?: boolean
+    metadata?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
+    platformId?: boolean
+    platform?: boolean | Token$platformArgs<ExtArgs>
   }, ExtArgs["result"]["token"]>
 
   export type TokenSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    daily_volume?: boolean
-    decimals?: boolean
-    extensions?: boolean
-    freeze_authority?: boolean
     logo_uri?: boolean
-    mint_authority?: boolean
-    minted_at?: boolean
     name?: boolean
-    permanent_delegate?: boolean
     symbol?: boolean
-    network?: boolean
     tags?: boolean
-    expiry?: boolean
+    metadata?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
+    platformId?: boolean
+    platform?: boolean | Token$platformArgs<ExtArgs>
   }, ExtArgs["result"]["token"]>
 
   export type TokenSelectScalar = {
     id?: boolean
     address?: boolean
-    daily_volume?: boolean
-    decimals?: boolean
-    extensions?: boolean
-    freeze_authority?: boolean
     logo_uri?: boolean
-    mint_authority?: boolean
-    minted_at?: boolean
     name?: boolean
-    permanent_delegate?: boolean
     symbol?: boolean
-    network?: boolean
     tags?: boolean
-    expiry?: boolean
+    metadata?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
+    platformId?: boolean
   }
 
-  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "daily_volume" | "decimals" | "extensions" | "freeze_authority" | "logo_uri" | "mint_authority" | "minted_at" | "name" | "permanent_delegate" | "symbol" | "network" | "tags" | "expiry" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["token"]>
+  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "logo_uri" | "name" | "symbol" | "tags" | "metadata" | "created_at" | "updated_at" | "deleted_at" | "platformId", ExtArgs["result"]["token"]>
+  export type TokenInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | Token$platformArgs<ExtArgs>
+  }
+  export type TokenIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | Token$platformArgs<ExtArgs>
+  }
+  export type TokenIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    platform?: boolean | Token$platformArgs<ExtArgs>
+  }
 
   export type $TokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Token"
-    objects: {}
+    objects: {
+      platform: Prisma.$PlatformPayload<ExtArgs> | null
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       address: string
-      daily_volume: number | null
-      decimals: number
-      extensions: Prisma.JsonValue
-      freeze_authority: string | null
       logo_uri: string | null
-      mint_authority: string | null
-      minted_at: Date | null
       name: string
-      permanent_delegate: string | null
       symbol: string
-      network: string
       tags: string[]
-      expiry: Date | null
+      metadata: Prisma.JsonValue
       created_at: Date
       updated_at: Date | null
       deleted_at: Date | null
+      platformId: string | null
     }, ExtArgs["result"]["token"]>
     composites: {}
   }
@@ -1741,6 +1663,7 @@ export namespace Prisma {
    */
   export interface Prisma__TokenClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    platform<T extends Token$platformArgs<ExtArgs> = {}>(args?: Subset<T, Token$platformArgs<ExtArgs>>): Prisma__PlatformClient<$Result.GetResult<Prisma.$PlatformPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1772,22 +1695,15 @@ export namespace Prisma {
   interface TokenFieldRefs {
     readonly id: FieldRef<"Token", 'String'>
     readonly address: FieldRef<"Token", 'String'>
-    readonly daily_volume: FieldRef<"Token", 'Float'>
-    readonly decimals: FieldRef<"Token", 'Int'>
-    readonly extensions: FieldRef<"Token", 'Json'>
-    readonly freeze_authority: FieldRef<"Token", 'String'>
     readonly logo_uri: FieldRef<"Token", 'String'>
-    readonly mint_authority: FieldRef<"Token", 'String'>
-    readonly minted_at: FieldRef<"Token", 'DateTime'>
     readonly name: FieldRef<"Token", 'String'>
-    readonly permanent_delegate: FieldRef<"Token", 'String'>
     readonly symbol: FieldRef<"Token", 'String'>
-    readonly network: FieldRef<"Token", 'String'>
     readonly tags: FieldRef<"Token", 'String[]'>
-    readonly expiry: FieldRef<"Token", 'DateTime'>
+    readonly metadata: FieldRef<"Token", 'Json'>
     readonly created_at: FieldRef<"Token", 'DateTime'>
     readonly updated_at: FieldRef<"Token", 'DateTime'>
     readonly deleted_at: FieldRef<"Token", 'DateTime'>
+    readonly platformId: FieldRef<"Token", 'String'>
   }
     
 
@@ -1804,6 +1720,10 @@ export namespace Prisma {
      * Omit specific fields from the Token
      */
     omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
     /**
      * Filter, which Token to fetch.
      */
@@ -1823,6 +1743,10 @@ export namespace Prisma {
      */
     omit?: TokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    /**
      * Filter, which Token to fetch.
      */
     where: TokenWhereUniqueInput
@@ -1840,6 +1764,10 @@ export namespace Prisma {
      * Omit specific fields from the Token
      */
     omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
     /**
      * Filter, which Token to fetch.
      */
@@ -1889,6 +1817,10 @@ export namespace Prisma {
      */
     omit?: TokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    /**
      * Filter, which Token to fetch.
      */
     where?: TokenWhereInput
@@ -1937,6 +1869,10 @@ export namespace Prisma {
      */
     omit?: TokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    /**
      * Filter, which Tokens to fetch.
      */
     where?: TokenWhereInput
@@ -1980,6 +1916,10 @@ export namespace Prisma {
      */
     omit?: TokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    /**
      * The data needed to create a Token.
      */
     data: XOR<TokenCreateInput, TokenUncheckedCreateInput>
@@ -2013,6 +1953,10 @@ export namespace Prisma {
      */
     data: TokenCreateManyInput | TokenCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2027,6 +1971,10 @@ export namespace Prisma {
      * Omit specific fields from the Token
      */
     omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
     /**
      * The data needed to update a Token.
      */
@@ -2079,6 +2027,10 @@ export namespace Prisma {
      * Limit how many Tokens to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2093,6 +2045,10 @@ export namespace Prisma {
      * Omit specific fields from the Token
      */
     omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
     /**
      * The filter to search for the Token to update in case it exists.
      */
@@ -2120,6 +2076,10 @@ export namespace Prisma {
      */
     omit?: TokenOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    /**
      * Filter which Token to delete.
      */
     where: TokenWhereUniqueInput
@@ -2140,6 +2100,25 @@ export namespace Prisma {
   }
 
   /**
+   * Token.platform
+   */
+  export type Token$platformArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Platform
+     */
+    select?: PlatformSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Platform
+     */
+    omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    where?: PlatformWhereInput
+  }
+
+  /**
    * Token without action
    */
   export type TokenDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2151,6 +2130,10 @@ export namespace Prisma {
      * Omit specific fields from the Token
      */
     omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
   }
 
 
@@ -2176,7 +2159,6 @@ export namespace Prisma {
 
   export type PlatformMinAggregateOutputType = {
     id: string | null
-    platform_id: string | null
     chain_identifier: number | null
     name: string | null
     shortname: string | null
@@ -2188,7 +2170,6 @@ export namespace Prisma {
 
   export type PlatformMaxAggregateOutputType = {
     id: string | null
-    platform_id: string | null
     chain_identifier: number | null
     name: string | null
     shortname: string | null
@@ -2200,7 +2181,6 @@ export namespace Prisma {
 
   export type PlatformCountAggregateOutputType = {
     id: number
-    platform_id: number
     chain_identifier: number
     name: number
     shortname: number
@@ -2223,7 +2203,6 @@ export namespace Prisma {
 
   export type PlatformMinAggregateInputType = {
     id?: true
-    platform_id?: true
     chain_identifier?: true
     name?: true
     shortname?: true
@@ -2235,7 +2214,6 @@ export namespace Prisma {
 
   export type PlatformMaxAggregateInputType = {
     id?: true
-    platform_id?: true
     chain_identifier?: true
     name?: true
     shortname?: true
@@ -2247,7 +2225,6 @@ export namespace Prisma {
 
   export type PlatformCountAggregateInputType = {
     id?: true
-    platform_id?: true
     chain_identifier?: true
     name?: true
     shortname?: true
@@ -2347,11 +2324,10 @@ export namespace Prisma {
 
   export type PlatformGroupByOutputType = {
     id: string
-    platform_id: string
     chain_identifier: number | null
     name: string
     shortname: string | null
-    native_coin_id: string | null
+    native_coin_id: string
     images: JsonValue
     created_at: Date
     updated_at: Date | null
@@ -2379,7 +2355,6 @@ export namespace Prisma {
 
   export type PlatformSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    platform_id?: boolean
     chain_identifier?: boolean
     name?: boolean
     shortname?: boolean
@@ -2388,11 +2363,12 @@ export namespace Prisma {
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
+    Token?: boolean | Platform$TokenArgs<ExtArgs>
+    _count?: boolean | PlatformCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["platform"]>
 
   export type PlatformSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    platform_id?: boolean
     chain_identifier?: boolean
     name?: boolean
     shortname?: boolean
@@ -2405,7 +2381,6 @@ export namespace Prisma {
 
   export type PlatformSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
-    platform_id?: boolean
     chain_identifier?: boolean
     name?: boolean
     shortname?: boolean
@@ -2418,7 +2393,6 @@ export namespace Prisma {
 
   export type PlatformSelectScalar = {
     id?: boolean
-    platform_id?: boolean
     chain_identifier?: boolean
     name?: boolean
     shortname?: boolean
@@ -2429,18 +2403,25 @@ export namespace Prisma {
     deleted_at?: boolean
   }
 
-  export type PlatformOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "platform_id" | "chain_identifier" | "name" | "shortname" | "native_coin_id" | "images" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["platform"]>
+  export type PlatformOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "chain_identifier" | "name" | "shortname" | "native_coin_id" | "images" | "created_at" | "updated_at" | "deleted_at", ExtArgs["result"]["platform"]>
+  export type PlatformInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    Token?: boolean | Platform$TokenArgs<ExtArgs>
+    _count?: boolean | PlatformCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PlatformIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type PlatformIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $PlatformPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Platform"
-    objects: {}
+    objects: {
+      Token: Prisma.$TokenPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      platform_id: string
       chain_identifier: number | null
       name: string
       shortname: string | null
-      native_coin_id: string | null
+      native_coin_id: string
       images: Prisma.JsonValue
       created_at: Date
       updated_at: Date | null
@@ -2839,6 +2820,7 @@ export namespace Prisma {
    */
   export interface Prisma__PlatformClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    Token<T extends Platform$TokenArgs<ExtArgs> = {}>(args?: Subset<T, Platform$TokenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2869,7 +2851,6 @@ export namespace Prisma {
    */
   interface PlatformFieldRefs {
     readonly id: FieldRef<"Platform", 'String'>
-    readonly platform_id: FieldRef<"Platform", 'String'>
     readonly chain_identifier: FieldRef<"Platform", 'Int'>
     readonly name: FieldRef<"Platform", 'String'>
     readonly shortname: FieldRef<"Platform", 'String'>
@@ -2895,6 +2876,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * Filter, which Platform to fetch.
      */
     where: PlatformWhereUniqueInput
@@ -2913,6 +2898,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * Filter, which Platform to fetch.
      */
     where: PlatformWhereUniqueInput
@@ -2930,6 +2919,10 @@ export namespace Prisma {
      * Omit specific fields from the Platform
      */
     omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
     /**
      * Filter, which Platform to fetch.
      */
@@ -2979,6 +2972,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * Filter, which Platform to fetch.
      */
     where?: PlatformWhereInput
@@ -3027,6 +3024,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * Filter, which Platforms to fetch.
      */
     where?: PlatformWhereInput
@@ -3069,6 +3070,10 @@ export namespace Prisma {
      * Omit specific fields from the Platform
      */
     omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
     /**
      * The data needed to create a Platform.
      */
@@ -3117,6 +3122,10 @@ export namespace Prisma {
      * Omit specific fields from the Platform
      */
     omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
     /**
      * The data needed to update a Platform.
      */
@@ -3184,6 +3193,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * The filter to search for the Platform to update in case it exists.
      */
     where: PlatformWhereUniqueInput
@@ -3210,6 +3223,10 @@ export namespace Prisma {
      */
     omit?: PlatformOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
+    /**
      * Filter which Platform to delete.
      */
     where: PlatformWhereUniqueInput
@@ -3230,6 +3247,30 @@ export namespace Prisma {
   }
 
   /**
+   * Platform.Token
+   */
+  export type Platform$TokenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Token
+     */
+    select?: TokenSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Token
+     */
+    omit?: TokenOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TokenInclude<ExtArgs> | null
+    where?: TokenWhereInput
+    orderBy?: TokenOrderByWithRelationInput | TokenOrderByWithRelationInput[]
+    cursor?: TokenWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TokenScalarFieldEnum | TokenScalarFieldEnum[]
+  }
+
+  /**
    * Platform without action
    */
   export type PlatformDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3241,6 +3282,10 @@ export namespace Prisma {
      * Omit specific fields from the Platform
      */
     omit?: PlatformOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlatformInclude<ExtArgs> | null
   }
 
 
@@ -3261,22 +3306,15 @@ export namespace Prisma {
   export const TokenScalarFieldEnum: {
     id: 'id',
     address: 'address',
-    daily_volume: 'daily_volume',
-    decimals: 'decimals',
-    extensions: 'extensions',
-    freeze_authority: 'freeze_authority',
     logo_uri: 'logo_uri',
-    mint_authority: 'mint_authority',
-    minted_at: 'minted_at',
     name: 'name',
-    permanent_delegate: 'permanent_delegate',
     symbol: 'symbol',
-    network: 'network',
     tags: 'tags',
-    expiry: 'expiry',
+    metadata: 'metadata',
     created_at: 'created_at',
     updated_at: 'updated_at',
-    deleted_at: 'deleted_at'
+    deleted_at: 'deleted_at',
+    platformId: 'platformId'
   };
 
   export type TokenScalarFieldEnum = (typeof TokenScalarFieldEnum)[keyof typeof TokenScalarFieldEnum]
@@ -3284,7 +3322,6 @@ export namespace Prisma {
 
   export const PlatformScalarFieldEnum: {
     id: 'id',
-    platform_id: 'platform_id',
     chain_identifier: 'chain_identifier',
     name: 'name',
     shortname: 'shortname',
@@ -3358,34 +3395,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Float'
-   */
-  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-  /**
-   * Reference to a field of type 'Float[]'
-   */
-  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -3411,6 +3420,34 @@ export namespace Prisma {
    */
   export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
     
+
+
+  /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float'
+   */
+  export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+  /**
+   * Reference to a field of type 'Float[]'
+   */
+  export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
   /**
    * Deep Input Types
    */
@@ -3422,43 +3459,31 @@ export namespace Prisma {
     NOT?: TokenWhereInput | TokenWhereInput[]
     id?: UuidFilter<"Token"> | string
     address?: StringFilter<"Token"> | string
-    daily_volume?: FloatNullableFilter<"Token"> | number | null
-    decimals?: IntFilter<"Token"> | number
-    extensions?: JsonFilter<"Token">
-    freeze_authority?: StringNullableFilter<"Token"> | string | null
     logo_uri?: StringNullableFilter<"Token"> | string | null
-    mint_authority?: StringNullableFilter<"Token"> | string | null
-    minted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     name?: StringFilter<"Token"> | string
-    permanent_delegate?: StringNullableFilter<"Token"> | string | null
     symbol?: StringFilter<"Token"> | string
-    network?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
-    expiry?: DateTimeNullableFilter<"Token"> | Date | string | null
+    metadata?: JsonFilter<"Token">
     created_at?: DateTimeFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
+    platformId?: StringNullableFilter<"Token"> | string | null
+    platform?: XOR<PlatformNullableScalarRelationFilter, PlatformWhereInput> | null
   }
 
   export type TokenOrderByWithRelationInput = {
     id?: SortOrder
     address?: SortOrder
-    daily_volume?: SortOrderInput | SortOrder
-    decimals?: SortOrder
-    extensions?: SortOrder
-    freeze_authority?: SortOrderInput | SortOrder
     logo_uri?: SortOrderInput | SortOrder
-    mint_authority?: SortOrderInput | SortOrder
-    minted_at?: SortOrderInput | SortOrder
     name?: SortOrder
-    permanent_delegate?: SortOrderInput | SortOrder
     symbol?: SortOrder
-    network?: SortOrder
     tags?: SortOrder
-    expiry?: SortOrderInput | SortOrder
+    metadata?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
     deleted_at?: SortOrderInput | SortOrder
+    platformId?: SortOrderInput | SortOrder
+    platform?: PlatformOrderByWithRelationInput
   }
 
   export type TokenWhereUniqueInput = Prisma.AtLeast<{
@@ -3467,48 +3492,33 @@ export namespace Prisma {
     AND?: TokenWhereInput | TokenWhereInput[]
     OR?: TokenWhereInput[]
     NOT?: TokenWhereInput | TokenWhereInput[]
-    daily_volume?: FloatNullableFilter<"Token"> | number | null
-    decimals?: IntFilter<"Token"> | number
-    extensions?: JsonFilter<"Token">
-    freeze_authority?: StringNullableFilter<"Token"> | string | null
     logo_uri?: StringNullableFilter<"Token"> | string | null
-    mint_authority?: StringNullableFilter<"Token"> | string | null
-    minted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     name?: StringFilter<"Token"> | string
-    permanent_delegate?: StringNullableFilter<"Token"> | string | null
     symbol?: StringFilter<"Token"> | string
-    network?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
-    expiry?: DateTimeNullableFilter<"Token"> | Date | string | null
+    metadata?: JsonFilter<"Token">
     created_at?: DateTimeFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
+    platformId?: StringNullableFilter<"Token"> | string | null
+    platform?: XOR<PlatformNullableScalarRelationFilter, PlatformWhereInput> | null
   }, "id" | "address">
 
   export type TokenOrderByWithAggregationInput = {
     id?: SortOrder
     address?: SortOrder
-    daily_volume?: SortOrderInput | SortOrder
-    decimals?: SortOrder
-    extensions?: SortOrder
-    freeze_authority?: SortOrderInput | SortOrder
     logo_uri?: SortOrderInput | SortOrder
-    mint_authority?: SortOrderInput | SortOrder
-    minted_at?: SortOrderInput | SortOrder
     name?: SortOrder
-    permanent_delegate?: SortOrderInput | SortOrder
     symbol?: SortOrder
-    network?: SortOrder
     tags?: SortOrder
-    expiry?: SortOrderInput | SortOrder
+    metadata?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
     deleted_at?: SortOrderInput | SortOrder
+    platformId?: SortOrderInput | SortOrder
     _count?: TokenCountOrderByAggregateInput
-    _avg?: TokenAvgOrderByAggregateInput
     _max?: TokenMaxOrderByAggregateInput
     _min?: TokenMinOrderByAggregateInput
-    _sum?: TokenSumOrderByAggregateInput
   }
 
   export type TokenScalarWhereWithAggregatesInput = {
@@ -3517,51 +3527,44 @@ export namespace Prisma {
     NOT?: TokenScalarWhereWithAggregatesInput | TokenScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Token"> | string
     address?: StringWithAggregatesFilter<"Token"> | string
-    daily_volume?: FloatNullableWithAggregatesFilter<"Token"> | number | null
-    decimals?: IntWithAggregatesFilter<"Token"> | number
-    extensions?: JsonWithAggregatesFilter<"Token">
-    freeze_authority?: StringNullableWithAggregatesFilter<"Token"> | string | null
     logo_uri?: StringNullableWithAggregatesFilter<"Token"> | string | null
-    mint_authority?: StringNullableWithAggregatesFilter<"Token"> | string | null
-    minted_at?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
     name?: StringWithAggregatesFilter<"Token"> | string
-    permanent_delegate?: StringNullableWithAggregatesFilter<"Token"> | string | null
     symbol?: StringWithAggregatesFilter<"Token"> | string
-    network?: StringWithAggregatesFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
-    expiry?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
+    metadata?: JsonWithAggregatesFilter<"Token">
     created_at?: DateTimeWithAggregatesFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
+    platformId?: StringNullableWithAggregatesFilter<"Token"> | string | null
   }
 
   export type PlatformWhereInput = {
     AND?: PlatformWhereInput | PlatformWhereInput[]
     OR?: PlatformWhereInput[]
     NOT?: PlatformWhereInput | PlatformWhereInput[]
-    id?: UuidFilter<"Platform"> | string
-    platform_id?: StringFilter<"Platform"> | string
+    id?: StringFilter<"Platform"> | string
     chain_identifier?: IntNullableFilter<"Platform"> | number | null
     name?: StringFilter<"Platform"> | string
     shortname?: StringNullableFilter<"Platform"> | string | null
-    native_coin_id?: StringNullableFilter<"Platform"> | string | null
+    native_coin_id?: StringFilter<"Platform"> | string
     images?: JsonFilter<"Platform">
     created_at?: DateTimeFilter<"Platform"> | Date | string
     updated_at?: DateTimeNullableFilter<"Platform"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Platform"> | Date | string | null
+    Token?: TokenListRelationFilter
   }
 
   export type PlatformOrderByWithRelationInput = {
     id?: SortOrder
-    platform_id?: SortOrder
     chain_identifier?: SortOrderInput | SortOrder
     name?: SortOrder
     shortname?: SortOrderInput | SortOrder
-    native_coin_id?: SortOrderInput | SortOrder
+    native_coin_id?: SortOrder
     images?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
     deleted_at?: SortOrderInput | SortOrder
+    Token?: TokenOrderByRelationAggregateInput
   }
 
   export type PlatformWhereUniqueInput = Prisma.AtLeast<{
@@ -3569,24 +3572,23 @@ export namespace Prisma {
     AND?: PlatformWhereInput | PlatformWhereInput[]
     OR?: PlatformWhereInput[]
     NOT?: PlatformWhereInput | PlatformWhereInput[]
-    platform_id?: StringFilter<"Platform"> | string
     chain_identifier?: IntNullableFilter<"Platform"> | number | null
     name?: StringFilter<"Platform"> | string
     shortname?: StringNullableFilter<"Platform"> | string | null
-    native_coin_id?: StringNullableFilter<"Platform"> | string | null
+    native_coin_id?: StringFilter<"Platform"> | string
     images?: JsonFilter<"Platform">
     created_at?: DateTimeFilter<"Platform"> | Date | string
     updated_at?: DateTimeNullableFilter<"Platform"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Platform"> | Date | string | null
+    Token?: TokenListRelationFilter
   }, "id">
 
   export type PlatformOrderByWithAggregationInput = {
     id?: SortOrder
-    platform_id?: SortOrder
     chain_identifier?: SortOrderInput | SortOrder
     name?: SortOrder
     shortname?: SortOrderInput | SortOrder
-    native_coin_id?: SortOrderInput | SortOrder
+    native_coin_id?: SortOrder
     images?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
@@ -3602,12 +3604,11 @@ export namespace Prisma {
     AND?: PlatformScalarWhereWithAggregatesInput | PlatformScalarWhereWithAggregatesInput[]
     OR?: PlatformScalarWhereWithAggregatesInput[]
     NOT?: PlatformScalarWhereWithAggregatesInput | PlatformScalarWhereWithAggregatesInput[]
-    id?: UuidWithAggregatesFilter<"Platform"> | string
-    platform_id?: StringWithAggregatesFilter<"Platform"> | string
+    id?: StringWithAggregatesFilter<"Platform"> | string
     chain_identifier?: IntNullableWithAggregatesFilter<"Platform"> | number | null
     name?: StringWithAggregatesFilter<"Platform"> | string
     shortname?: StringNullableWithAggregatesFilter<"Platform"> | string | null
-    native_coin_id?: StringNullableWithAggregatesFilter<"Platform"> | string | null
+    native_coin_id?: StringWithAggregatesFilter<"Platform"> | string
     images?: JsonWithAggregatesFilter<"Platform">
     created_at?: DateTimeWithAggregatesFilter<"Platform"> | Date | string
     updated_at?: DateTimeNullableWithAggregatesFilter<"Platform"> | Date | string | null
@@ -3617,124 +3618,81 @@ export namespace Prisma {
   export type TokenCreateInput = {
     id?: string
     address: string
-    daily_volume?: number | null
-    decimals: number
-    extensions: JsonNullValueInput | InputJsonValue
-    freeze_authority?: string | null
     logo_uri?: string | null
-    mint_authority?: string | null
-    minted_at?: Date | string | null
     name: string
-    permanent_delegate?: string | null
     symbol: string
-    network: string
     tags?: TokenCreatetagsInput | string[]
-    expiry?: Date | string | null
+    metadata: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
+    platform?: PlatformCreateNestedOneWithoutTokenInput
   }
 
   export type TokenUncheckedCreateInput = {
     id?: string
     address: string
-    daily_volume?: number | null
-    decimals: number
-    extensions: JsonNullValueInput | InputJsonValue
-    freeze_authority?: string | null
     logo_uri?: string | null
-    mint_authority?: string | null
-    minted_at?: Date | string | null
     name: string
-    permanent_delegate?: string | null
     symbol: string
-    network: string
     tags?: TokenCreatetagsInput | string[]
-    expiry?: Date | string | null
+    metadata: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
+    platformId?: string | null
   }
 
   export type TokenUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    daily_volume?: NullableFloatFieldUpdateOperationsInput | number | null
-    decimals?: IntFieldUpdateOperationsInput | number
-    extensions?: JsonNullValueInput | InputJsonValue
-    freeze_authority?: NullableStringFieldUpdateOperationsInput | string | null
     logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
-    mint_authority?: NullableStringFieldUpdateOperationsInput | string | null
-    minted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     name?: StringFieldUpdateOperationsInput | string
-    permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
-    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
-    expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    platform?: PlatformUpdateOneWithoutTokenNestedInput
   }
 
   export type TokenUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    daily_volume?: NullableFloatFieldUpdateOperationsInput | number | null
-    decimals?: IntFieldUpdateOperationsInput | number
-    extensions?: JsonNullValueInput | InputJsonValue
-    freeze_authority?: NullableStringFieldUpdateOperationsInput | string | null
     logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
-    mint_authority?: NullableStringFieldUpdateOperationsInput | string | null
-    minted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     name?: StringFieldUpdateOperationsInput | string
-    permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
-    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
-    expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    platformId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TokenCreateManyInput = {
     id?: string
     address: string
-    daily_volume?: number | null
-    decimals: number
-    extensions: JsonNullValueInput | InputJsonValue
-    freeze_authority?: string | null
     logo_uri?: string | null
-    mint_authority?: string | null
-    minted_at?: Date | string | null
     name: string
-    permanent_delegate?: string | null
     symbol: string
-    network: string
     tags?: TokenCreatetagsInput | string[]
-    expiry?: Date | string | null
+    metadata: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
+    platformId?: string | null
   }
 
   export type TokenUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    daily_volume?: NullableFloatFieldUpdateOperationsInput | number | null
-    decimals?: IntFieldUpdateOperationsInput | number
-    extensions?: JsonNullValueInput | InputJsonValue
-    freeze_authority?: NullableStringFieldUpdateOperationsInput | string | null
     logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
-    mint_authority?: NullableStringFieldUpdateOperationsInput | string | null
-    minted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     name?: StringFieldUpdateOperationsInput | string
-    permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
-    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
-    expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3743,83 +3701,75 @@ export namespace Prisma {
   export type TokenUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    daily_volume?: NullableFloatFieldUpdateOperationsInput | number | null
-    decimals?: IntFieldUpdateOperationsInput | number
-    extensions?: JsonNullValueInput | InputJsonValue
-    freeze_authority?: NullableStringFieldUpdateOperationsInput | string | null
     logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
-    mint_authority?: NullableStringFieldUpdateOperationsInput | string | null
-    minted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     name?: StringFieldUpdateOperationsInput | string
-    permanent_delegate?: NullableStringFieldUpdateOperationsInput | string | null
     symbol?: StringFieldUpdateOperationsInput | string
-    network?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
-    expiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    platformId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type PlatformCreateInput = {
-    id?: string
-    platform_id: string
+    id: string
     chain_identifier?: number | null
     name: string
     shortname?: string | null
-    native_coin_id?: string | null
+    native_coin_id: string
     images: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
+    Token?: TokenCreateNestedManyWithoutPlatformInput
   }
 
   export type PlatformUncheckedCreateInput = {
-    id?: string
-    platform_id: string
+    id: string
     chain_identifier?: number | null
     name: string
     shortname?: string | null
-    native_coin_id?: string | null
+    native_coin_id: string
     images: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
+    Token?: TokenUncheckedCreateNestedManyWithoutPlatformInput
   }
 
   export type PlatformUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    platform_id?: StringFieldUpdateOperationsInput | string
     chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
     name?: StringFieldUpdateOperationsInput | string
     shortname?: NullableStringFieldUpdateOperationsInput | string | null
-    native_coin_id?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
     images?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Token?: TokenUpdateManyWithoutPlatformNestedInput
   }
 
   export type PlatformUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    platform_id?: StringFieldUpdateOperationsInput | string
     chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
     name?: StringFieldUpdateOperationsInput | string
     shortname?: NullableStringFieldUpdateOperationsInput | string | null
-    native_coin_id?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
     images?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    Token?: TokenUncheckedUpdateManyWithoutPlatformNestedInput
   }
 
   export type PlatformCreateManyInput = {
-    id?: string
-    platform_id: string
+    id: string
     chain_identifier?: number | null
     name: string
     shortname?: string | null
-    native_coin_id?: string | null
+    native_coin_id: string
     images: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
@@ -3828,11 +3778,10 @@ export namespace Prisma {
 
   export type PlatformUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    platform_id?: StringFieldUpdateOperationsInput | string
     chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
     name?: StringFieldUpdateOperationsInput | string
     shortname?: NullableStringFieldUpdateOperationsInput | string | null
-    native_coin_id?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
     images?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3841,11 +3790,10 @@ export namespace Prisma {
 
   export type PlatformUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    platform_id?: StringFieldUpdateOperationsInput | string
     chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
     name?: StringFieldUpdateOperationsInput | string
     shortname?: NullableStringFieldUpdateOperationsInput | string | null
-    native_coin_id?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
     images?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3879,26 +3827,27 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type FloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type IntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
   }
   export type JsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -3924,19 +3873,15 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  export type DateTimeFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -3950,23 +3895,9 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
-  export type StringNullableListFilter<$PrismaModel = never> = {
-    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    has?: string | StringFieldRefInput<$PrismaModel> | null
-    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
-    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
-    isEmpty?: boolean
-  }
-
-  export type DateTimeFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  export type PlatformNullableScalarRelationFilter = {
+    is?: PlatformWhereInput | null
+    isNot?: PlatformWhereInput | null
   }
 
   export type SortOrderInput = {
@@ -3977,70 +3908,39 @@ export namespace Prisma {
   export type TokenCountOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    daily_volume?: SortOrder
-    decimals?: SortOrder
-    extensions?: SortOrder
-    freeze_authority?: SortOrder
     logo_uri?: SortOrder
-    mint_authority?: SortOrder
-    minted_at?: SortOrder
     name?: SortOrder
-    permanent_delegate?: SortOrder
     symbol?: SortOrder
-    network?: SortOrder
     tags?: SortOrder
-    expiry?: SortOrder
+    metadata?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     deleted_at?: SortOrder
-  }
-
-  export type TokenAvgOrderByAggregateInput = {
-    daily_volume?: SortOrder
-    decimals?: SortOrder
+    platformId?: SortOrder
   }
 
   export type TokenMaxOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    daily_volume?: SortOrder
-    decimals?: SortOrder
-    freeze_authority?: SortOrder
     logo_uri?: SortOrder
-    mint_authority?: SortOrder
-    minted_at?: SortOrder
     name?: SortOrder
-    permanent_delegate?: SortOrder
     symbol?: SortOrder
-    network?: SortOrder
-    expiry?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     deleted_at?: SortOrder
+    platformId?: SortOrder
   }
 
   export type TokenMinOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    daily_volume?: SortOrder
-    decimals?: SortOrder
-    freeze_authority?: SortOrder
     logo_uri?: SortOrder
-    mint_authority?: SortOrder
-    minted_at?: SortOrder
     name?: SortOrder
-    permanent_delegate?: SortOrder
     symbol?: SortOrder
-    network?: SortOrder
-    expiry?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     deleted_at?: SortOrder
-  }
-
-  export type TokenSumOrderByAggregateInput = {
-    daily_volume?: SortOrder
-    decimals?: SortOrder
+    platformId?: SortOrder
   }
 
   export type UuidWithAggregatesFilter<$PrismaModel = never> = {
@@ -4076,36 +3976,22 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -4134,22 +4020,18 @@ export namespace Prisma {
     _max?: NestedJsonFilter<$PrismaModel>
   }
 
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
+  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -4166,20 +4048,6 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type IntNullableFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -4191,9 +4059,18 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type TokenListRelationFilter = {
+    every?: TokenWhereInput
+    some?: TokenWhereInput
+    none?: TokenWhereInput
+  }
+
+  export type TokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type PlatformCountOrderByAggregateInput = {
     id?: SortOrder
-    platform_id?: SortOrder
     chain_identifier?: SortOrder
     name?: SortOrder
     shortname?: SortOrder
@@ -4210,7 +4087,6 @@ export namespace Prisma {
 
   export type PlatformMaxOrderByAggregateInput = {
     id?: SortOrder
-    platform_id?: SortOrder
     chain_identifier?: SortOrder
     name?: SortOrder
     shortname?: SortOrder
@@ -4222,7 +4098,6 @@ export namespace Prisma {
 
   export type PlatformMinOrderByAggregateInput = {
     id?: SortOrder
-    platform_id?: SortOrder
     chain_identifier?: SortOrder
     name?: SortOrder
     shortname?: SortOrder
@@ -4256,32 +4131,18 @@ export namespace Prisma {
     set: string[]
   }
 
+  export type PlatformCreateNestedOneWithoutTokenInput = {
+    create?: XOR<PlatformCreateWithoutTokenInput, PlatformUncheckedCreateWithoutTokenInput>
+    connectOrCreate?: PlatformCreateOrConnectWithoutTokenInput
+    connect?: PlatformWhereUniqueInput
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
-  export type NullableFloatFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
-  }
-
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
   }
 
   export type TokenUpdatetagsInput = {
@@ -4293,12 +4154,68 @@ export namespace Prisma {
     set?: Date | string
   }
 
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type PlatformUpdateOneWithoutTokenNestedInput = {
+    create?: XOR<PlatformCreateWithoutTokenInput, PlatformUncheckedCreateWithoutTokenInput>
+    connectOrCreate?: PlatformCreateOrConnectWithoutTokenInput
+    upsert?: PlatformUpsertWithoutTokenInput
+    disconnect?: PlatformWhereInput | boolean
+    delete?: PlatformWhereInput | boolean
+    connect?: PlatformWhereUniqueInput
+    update?: XOR<XOR<PlatformUpdateToOneWithWhereWithoutTokenInput, PlatformUpdateWithoutTokenInput>, PlatformUncheckedUpdateWithoutTokenInput>
+  }
+
+  export type TokenCreateNestedManyWithoutPlatformInput = {
+    create?: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput> | TokenCreateWithoutPlatformInput[] | TokenUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: TokenCreateOrConnectWithoutPlatformInput | TokenCreateOrConnectWithoutPlatformInput[]
+    createMany?: TokenCreateManyPlatformInputEnvelope
+    connect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+  }
+
+  export type TokenUncheckedCreateNestedManyWithoutPlatformInput = {
+    create?: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput> | TokenCreateWithoutPlatformInput[] | TokenUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: TokenCreateOrConnectWithoutPlatformInput | TokenCreateOrConnectWithoutPlatformInput[]
+    createMany?: TokenCreateManyPlatformInputEnvelope
+    connect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+  }
+
   export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type TokenUpdateManyWithoutPlatformNestedInput = {
+    create?: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput> | TokenCreateWithoutPlatformInput[] | TokenUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: TokenCreateOrConnectWithoutPlatformInput | TokenCreateOrConnectWithoutPlatformInput[]
+    upsert?: TokenUpsertWithWhereUniqueWithoutPlatformInput | TokenUpsertWithWhereUniqueWithoutPlatformInput[]
+    createMany?: TokenCreateManyPlatformInputEnvelope
+    set?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    disconnect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    delete?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    connect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    update?: TokenUpdateWithWhereUniqueWithoutPlatformInput | TokenUpdateWithWhereUniqueWithoutPlatformInput[]
+    updateMany?: TokenUpdateManyWithWhereWithoutPlatformInput | TokenUpdateManyWithWhereWithoutPlatformInput[]
+    deleteMany?: TokenScalarWhereInput | TokenScalarWhereInput[]
+  }
+
+  export type TokenUncheckedUpdateManyWithoutPlatformNestedInput = {
+    create?: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput> | TokenCreateWithoutPlatformInput[] | TokenUncheckedCreateWithoutPlatformInput[]
+    connectOrCreate?: TokenCreateOrConnectWithoutPlatformInput | TokenCreateOrConnectWithoutPlatformInput[]
+    upsert?: TokenUpsertWithWhereUniqueWithoutPlatformInput | TokenUpsertWithWhereUniqueWithoutPlatformInput[]
+    createMany?: TokenCreateManyPlatformInputEnvelope
+    set?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    disconnect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    delete?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    connect?: TokenWhereUniqueInput | TokenWhereUniqueInput[]
+    update?: TokenUpdateWithWhereUniqueWithoutPlatformInput | TokenUpdateWithWhereUniqueWithoutPlatformInput[]
+    updateMany?: TokenUpdateManyWithWhereWithoutPlatformInput | TokenUpdateManyWithWhereWithoutPlatformInput[]
+    deleteMany?: TokenScalarWhereInput | TokenScalarWhereInput[]
   }
 
   export type NestedUuidFilter<$PrismaModel = never> = {
@@ -4326,28 +4243,6 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedIntFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntFilter<$PrismaModel> | number
-  }
-
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -4362,17 +4257,6 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -4382,6 +4266,17 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
   export type NestedUuidWithAggregatesFilter<$PrismaModel = never> = {
@@ -4396,6 +4291,17 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
+  }
+
+  export type NestedIntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
   }
 
   export type NestedStringWithAggregatesFilter<$PrismaModel = never> = {
@@ -4415,20 +4321,21 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
-  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedFloatNullableFilter<$PrismaModel>
-    _min?: NestedFloatNullableFilter<$PrismaModel>
-    _max?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
@@ -4440,33 +4347,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
-  }
-
-  export type NestedFloatFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel>
-    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatFilter<$PrismaModel> | number
   }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -4492,21 +4372,18 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
+  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedDateTimeFilter<$PrismaModel>
+    _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -4523,20 +4400,6 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeWithAggregatesFilter<$PrismaModel> | Date | string
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedDateTimeFilter<$PrismaModel>
-    _max?: NestedDateTimeFilter<$PrismaModel>
-  }
-
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel> | null
     in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
@@ -4551,6 +4414,202 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type PlatformCreateWithoutTokenInput = {
+    id: string
+    chain_identifier?: number | null
+    name: string
+    shortname?: string | null
+    native_coin_id: string
+    images: JsonNullValueInput | InputJsonValue
+    created_at?: Date | string
+    updated_at?: Date | string | null
+    deleted_at?: Date | string | null
+  }
+
+  export type PlatformUncheckedCreateWithoutTokenInput = {
+    id: string
+    chain_identifier?: number | null
+    name: string
+    shortname?: string | null
+    native_coin_id: string
+    images: JsonNullValueInput | InputJsonValue
+    created_at?: Date | string
+    updated_at?: Date | string | null
+    deleted_at?: Date | string | null
+  }
+
+  export type PlatformCreateOrConnectWithoutTokenInput = {
+    where: PlatformWhereUniqueInput
+    create: XOR<PlatformCreateWithoutTokenInput, PlatformUncheckedCreateWithoutTokenInput>
+  }
+
+  export type PlatformUpsertWithoutTokenInput = {
+    update: XOR<PlatformUpdateWithoutTokenInput, PlatformUncheckedUpdateWithoutTokenInput>
+    create: XOR<PlatformCreateWithoutTokenInput, PlatformUncheckedCreateWithoutTokenInput>
+    where?: PlatformWhereInput
+  }
+
+  export type PlatformUpdateToOneWithWhereWithoutTokenInput = {
+    where?: PlatformWhereInput
+    data: XOR<PlatformUpdateWithoutTokenInput, PlatformUncheckedUpdateWithoutTokenInput>
+  }
+
+  export type PlatformUpdateWithoutTokenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
+    name?: StringFieldUpdateOperationsInput | string
+    shortname?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
+    images?: JsonNullValueInput | InputJsonValue
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PlatformUncheckedUpdateWithoutTokenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    chain_identifier?: NullableIntFieldUpdateOperationsInput | number | null
+    name?: StringFieldUpdateOperationsInput | string
+    shortname?: NullableStringFieldUpdateOperationsInput | string | null
+    native_coin_id?: StringFieldUpdateOperationsInput | string
+    images?: JsonNullValueInput | InputJsonValue
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TokenCreateWithoutPlatformInput = {
+    id?: string
+    address: string
+    logo_uri?: string | null
+    name: string
+    symbol: string
+    tags?: TokenCreatetagsInput | string[]
+    metadata: JsonNullValueInput | InputJsonValue
+    created_at?: Date | string
+    updated_at?: Date | string | null
+    deleted_at?: Date | string | null
+  }
+
+  export type TokenUncheckedCreateWithoutPlatformInput = {
+    id?: string
+    address: string
+    logo_uri?: string | null
+    name: string
+    symbol: string
+    tags?: TokenCreatetagsInput | string[]
+    metadata: JsonNullValueInput | InputJsonValue
+    created_at?: Date | string
+    updated_at?: Date | string | null
+    deleted_at?: Date | string | null
+  }
+
+  export type TokenCreateOrConnectWithoutPlatformInput = {
+    where: TokenWhereUniqueInput
+    create: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput>
+  }
+
+  export type TokenCreateManyPlatformInputEnvelope = {
+    data: TokenCreateManyPlatformInput | TokenCreateManyPlatformInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TokenUpsertWithWhereUniqueWithoutPlatformInput = {
+    where: TokenWhereUniqueInput
+    update: XOR<TokenUpdateWithoutPlatformInput, TokenUncheckedUpdateWithoutPlatformInput>
+    create: XOR<TokenCreateWithoutPlatformInput, TokenUncheckedCreateWithoutPlatformInput>
+  }
+
+  export type TokenUpdateWithWhereUniqueWithoutPlatformInput = {
+    where: TokenWhereUniqueInput
+    data: XOR<TokenUpdateWithoutPlatformInput, TokenUncheckedUpdateWithoutPlatformInput>
+  }
+
+  export type TokenUpdateManyWithWhereWithoutPlatformInput = {
+    where: TokenScalarWhereInput
+    data: XOR<TokenUpdateManyMutationInput, TokenUncheckedUpdateManyWithoutPlatformInput>
+  }
+
+  export type TokenScalarWhereInput = {
+    AND?: TokenScalarWhereInput | TokenScalarWhereInput[]
+    OR?: TokenScalarWhereInput[]
+    NOT?: TokenScalarWhereInput | TokenScalarWhereInput[]
+    id?: UuidFilter<"Token"> | string
+    address?: StringFilter<"Token"> | string
+    logo_uri?: StringNullableFilter<"Token"> | string | null
+    name?: StringFilter<"Token"> | string
+    symbol?: StringFilter<"Token"> | string
+    tags?: StringNullableListFilter<"Token">
+    metadata?: JsonFilter<"Token">
+    created_at?: DateTimeFilter<"Token"> | Date | string
+    updated_at?: DateTimeNullableFilter<"Token"> | Date | string | null
+    deleted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
+    platformId?: StringNullableFilter<"Token"> | string | null
+  }
+
+  export type TokenCreateManyPlatformInput = {
+    id?: string
+    address: string
+    logo_uri?: string | null
+    name: string
+    symbol: string
+    tags?: TokenCreatetagsInput | string[]
+    metadata: JsonNullValueInput | InputJsonValue
+    created_at?: Date | string
+    updated_at?: Date | string | null
+    deleted_at?: Date | string | null
+  }
+
+  export type TokenUpdateWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    symbol?: StringFieldUpdateOperationsInput | string
+    tags?: TokenUpdatetagsInput | string[]
+    metadata?: JsonNullValueInput | InputJsonValue
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TokenUncheckedUpdateWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    symbol?: StringFieldUpdateOperationsInput | string
+    tags?: TokenUpdatetagsInput | string[]
+    metadata?: JsonNullValueInput | InputJsonValue
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type TokenUncheckedUpdateManyWithoutPlatformInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    address?: StringFieldUpdateOperationsInput | string
+    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: StringFieldUpdateOperationsInput | string
+    symbol?: StringFieldUpdateOperationsInput | string
+    tags?: TokenUpdatetagsInput | string[]
+    metadata?: JsonNullValueInput | InputJsonValue
+    created_at?: DateTimeFieldUpdateOperationsInput | Date | string
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
 

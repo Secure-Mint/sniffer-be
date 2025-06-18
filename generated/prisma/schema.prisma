@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -18,44 +12,47 @@ generator tsed {
   provider = "tsed-prisma"
 }
 
+// These are all metadata fields inside Token model
+//
+// daily_volume       Float?    
+// decimals           Int       
+// freeze_authority   String?   
+// mint_authority     String?   
+// minted_at          DateTime?
+// permanent_delegate String?   
+// coin_gecko_id String?   
+
 model Token {
-  id                 String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  address            String    @unique @db.VarChar
-  daily_volume       Float?    @db.DoublePrecision
-  decimals           Int       @db.Integer
-  extensions         Json
-  freeze_authority   String?   @db.VarChar
-  logo_uri           String?   @db.VarChar
-  mint_authority     String?   @db.VarChar
-  minted_at          DateTime?
-  name               String    @db.VarChar
-  permanent_delegate String?   @db.VarChar
-  symbol             String    @db.VarChar
-  network            String    @db.VarChar
-  tags               String[]  @default([])
-  expiry             DateTime? @db.Timestamp(6)
-  created_at         DateTime  @default(now()) @db.Timestamp(6)
-  updated_at         DateTime? @updatedAt @db.Timestamp(6)
-  deleted_at         DateTime? @db.Timestamp(6)
+  id         String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  address    String    @unique @db.VarChar
+  logo_uri   String?   @db.VarChar
+  name       String    @db.VarChar
+  symbol     String    @db.VarChar
+  platform   Platform? @relation(fields: [platformId], references: [id])
+  tags       String[]  @default([])
+  metadata   Json
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @updatedAt @db.Timestamp(6)
+  deleted_at DateTime? @db.Timestamp(6)
+  platformId String?   @db.VarChar
 
   @@index([tags], type: Gin)
   @@index([created_at(sort: Desc)])
   @@index([updated_at(sort: Desc)])
-  @@index([minted_at(sort: Desc)])
   @@map("token")
 }
 
 model Platform {
-  id               String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  platform_id      String    @db.VarChar
+  id               String    @unique @db.VarChar
   chain_identifier Int?      @db.Integer
   name             String    @db.VarChar
   shortname        String?   @db.VarChar
-  native_coin_id   String?   @db.VarChar
+  native_coin_id   String    @db.VarChar
   images           Json
   created_at       DateTime  @default(now()) @db.Timestamp(6)
   updated_at       DateTime? @updatedAt @db.Timestamp(6)
   deleted_at       DateTime? @db.Timestamp(6)
+  Token            Token[]
 
   @@index([created_at(sort: Desc)])
   @@index([updated_at(sort: Desc)])

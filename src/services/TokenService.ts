@@ -1,6 +1,6 @@
 import { Injectable } from "@tsed/di";
 import { prisma } from "./PrismaService";
-import { TokenListParams, TokenModel } from "../models";
+import { TokenMetadata, TokenModel } from "../models";
 import { Prisma, Token } from "generated/prisma";
 import { isValidUUID } from "../utils";
 
@@ -8,7 +8,7 @@ import { isValidUUID } from "../utils";
 export class TokenService {
   public async create(token: TokenModel) {
     return prisma.token.create({
-      data: { ...token, extensions: token.extensions as unknown as Prisma.JsonObject, updated_at: new Date() }
+      data: { ...token, metadata: token.metadata as unknown as Prisma.JsonObject, updated_at: new Date() }
     });
   }
 
@@ -17,15 +17,27 @@ export class TokenService {
       where: { address: token.address },
       data: {
         ...token,
-        extensions: token.extensions as unknown as Prisma.JsonObject,
+        metadata: token.metadata as unknown as Prisma.JsonObject,
         updated_at: token.updated_at ? new Date(token.updated_at) : new Date()
       }
     });
   }
 
-  public async findByAddress(address: string) {
+  public async findByAddress<T extends Prisma.TokenInclude | undefined>(address: string, include?: T) {
     return prisma.token.findUnique({
-      where: { address }
+      where: { address },
+      include: include as T
     });
+  }
+
+  public async findManyBySymbol<T extends Prisma.TokenInclude | undefined>(symbol: string, include?: T) {
+    return prisma.token.findMany({
+      where: { symbol },
+      include: include as T
+    });
+  }
+
+  public parseMetadata(token: Token) {
+    return token.metadata as unknown as TokenMetadata;
   }
 }
