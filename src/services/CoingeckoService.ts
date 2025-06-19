@@ -1,11 +1,12 @@
 import { Injectable } from "@tsed/di";
 import { makeRequest, Secrets, SOLANA } from "../utils";
+import { CoingeckoFullToken } from "types";
 
 @Injectable()
 export class CoingeckoService {
   public baseURL = "https://api.coingecko.com/api/v3";
 
-  public fetchCoingeckoTokens = async () => {
+  public fetchTokens = async () => {
     console.log("FETCHING TOKENS FROM COINGECKO ...");
     const { data: list } = await makeRequest({
       url: `${this.baseURL}/coins/list`,
@@ -19,16 +20,22 @@ export class CoingeckoService {
     return filtered;
   };
 
-  public isStableOnCoingeckoByAddress = async (address: string): Promise<boolean> => {
+  public isStableCoin = async (address: string): Promise<boolean> => {
     try {
-      const { data: tokenDetail } = await makeRequest({
-        url: `${this.baseURL}/coins/${SOLANA}/contract/${address}`,
-        method: "GET",
-        headers: { "x-cg-demo-api-key": Secrets.coingeckoApiKey }
-      });
+      const tokenDetail = await this.fetchTokenByAddress(address);
       return tokenDetail.categories.includes("Stablecoins") && tokenDetail.platforms.solana === address;
     } catch (err) {
       return false;
     }
+  };
+
+  public fetchTokenByAddress = async (address: string): Promise<CoingeckoFullToken> => {
+    const { data } = await makeRequest({
+      url: `${this.baseURL}/coins/${SOLANA}/contract/${address}`,
+      method: "GET",
+      headers: { "x-cg-demo-api-key": Secrets.coingeckoApiKey },
+      query: { include_platform: true }
+    });
+    return data;
   };
 }

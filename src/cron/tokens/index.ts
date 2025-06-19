@@ -1,7 +1,9 @@
 import { Prisma, PrismaPromise } from "generated/prisma";
-import { TokenService, SolanaService, CoingeckoService } from "../../services";
 import { makeRequest, Solana, SOLANA, STABLE_COIN } from "../../utils";
-import { prisma } from "../../services";
+import { prisma } from "../../services/PrismaService";
+import { SolanaService } from "../../services/SolanaService";
+import { TokenService } from "../../services/TokenService";
+import { CoingeckoService } from "../../services/CoingeckoService";
 import { TokenMetadata } from "../../models";
 import { CoingeckoSimpleToken, JupiterToken } from "../../../types";
 
@@ -22,7 +24,7 @@ const fetchJupiterTokens = async () => {
 
 const fetchAndSaveTokens = async () => {
   const stablecoins = await solanaService.fetchSPLStableCoins();
-  const coinGeckoTokens: CoingeckoSimpleToken[] = await coingeckoService.fetchCoingeckoTokens();
+  const coinGeckoTokens: CoingeckoSimpleToken[] = await coingeckoService.fetchTokens();
 
   const allJupiterTokens: JupiterToken[] = await fetchJupiterTokens();
 

@@ -2,7 +2,9 @@ import { Controller, Inject } from "@tsed/di";
 import { Context, QueryParams } from "@tsed/platform-params";
 import { Get, Returns } from "@tsed/schema";
 import { Address, SnifferModel } from "../../models";
-import { SolanaService, TokenService } from "../../services";
+import { SolanaService } from "../../services/SolanaService";
+import { TokenService } from "../../services/TokenService";
+import { CoingeckoService } from "../../services/CoingeckoService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
 
@@ -10,6 +12,7 @@ import { NotFound } from "@tsed/exceptions";
 export class SnifferController {
   @Inject() private tokenService: TokenService;
   @Inject() private solanaService: SolanaService;
+  @Inject() private coingeckoService: CoingeckoService;
 
   @Get("")
   @(Returns(200, SuccessResult).Of(SnifferModel))
@@ -19,8 +22,11 @@ export class SnifferController {
     const tokenMetadata = this.tokenService.parseMetadata(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
 
-    const tokenHolders = await this.solanaService.getTokenHolders(token.address);
-    console.log(tokenHolders);
+    // const tokenHolders = await this.solanaService.getTokenHolders(token.address);
+    // console.log(tokenHolders);
+
+    const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
+    console.log(tokenData);
 
     if (!tokenMetadata?.mint_info_updated_at) {
       const mintData = await this.solanaService.getMintAndFreezeAuthority(token.address);

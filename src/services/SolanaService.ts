@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@tsed/di";
 import { PublicKey } from "@solana/web3.js";
 import { getMint, AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
-import { CoingeckoService } from "./";
+import { CoingeckoService } from "./CoingeckoService";
 import { SPLToken } from "types";
 
 @Injectable()
@@ -21,13 +21,13 @@ export class SolanaService {
     for (const token of stableTagged) {
       const id = token.extensions?.coingeckoId;
       if (!id) continue;
-      if (await this.coingeckoService.isStableOnCoingeckoByAddress(token.address)) verified.push(token);
+      if (await this.coingeckoService.isStableCoin(token.address)) verified.push(token);
       await sleep(1500);
     }
     return verified;
   };
 
-  public static fetchAccountInfo = async (mintAddress: string) => {
+  public fetchAccountInfo = async (mintAddress: string) => {
     try {
       if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
       const publicKey = new PublicKey(mintAddress);

@@ -46,3 +46,18 @@ export interface CoingeckoSimpleToken {
   name: string;
   platforms: Record<string, string>;
 }
+
+export interface CoingeckoFullToken {
+  id: string;
+  symbol: string;
+  name: string;
+  platforms: Record<"solana" | "ethereum", string>;
+  market_cap: Record<"usd" | "sol", number>;
+  fully_diluted_valuation: Record<"usd" | "sol", number>;
+  categories: string[];
+  total_supply: number;
+  max_supply: number;
+  max_supply_infinite: boolean;
+  circulating_supply: number;
+  market_cap_rank: number;
+}
