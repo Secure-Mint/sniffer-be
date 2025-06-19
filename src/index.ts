@@ -2,7 +2,7 @@ import { $log } from "@tsed/logger";
 import { PlatformExpress } from "@tsed/platform-express";
 
 import { Server } from "./Server";
-import { Solana } from "./utils";
+import { Solana, Secrets } from "./utils";
 
 const SIG_EVENTS = [
   "beforeExit",
@@ -21,6 +21,7 @@ const SIG_EVENTS = [
 ];
 
 try {
+  Secrets.init();
   Solana.init();
   const platform = await PlatformExpress.bootstrap(Server);
   await platform.listen();

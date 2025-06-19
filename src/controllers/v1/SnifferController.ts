@@ -18,8 +18,12 @@ export class SnifferController {
     if (!token) throw new NotFound("Token not found");
     const tokenMetadata = this.tokenService.parseMetadata(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
-    const mintData = await Solana.getMintAndFreezeAuthority(token.address);
+
+    const tokenHolders = await Solana.getTokenHolders(token.address);
+    console.log(tokenHolders);
+
     if (!tokenMetadata?.mint_info_updated_at) {
+      const mintData = await Solana.getMintAndFreezeAuthority(token.address);
       await this.tokenService.update({
         ...token,
         metadata: {
@@ -32,6 +36,7 @@ export class SnifferController {
       tokenMetadata.mint_authority = mintData.mintAuthority;
       tokenMetadata.freeze_authority = mintData.freezeAuthority;
     }
+
     return new SuccessResult(
       {
         symbol: token.symbol,
@@ -40,8 +45,8 @@ export class SnifferController {
         dailyVolume: tokenMetadata.daily_volume || 0,
         tags: token.tags,
         impersonator: sameSymbolTokens.length && !tokenMetadata.coingecko_verified,
-        freezeAuthority: Boolean(mintData.freezeAuthority),
-        mintAuthority: Boolean(mintData.mintAuthority)
+        freezeAuthority: Boolean(tokenMetadata.freeze_authority),
+        mintAuthority: Boolean(tokenMetadata.mint_authority)
       },
       SnifferModel
     );

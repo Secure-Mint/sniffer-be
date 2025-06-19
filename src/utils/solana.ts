@@ -1,12 +1,12 @@
-import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
-import { getMint } from "@solana/spl-token";
-import { isBase58Encoded } from "../utils";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getMint, AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { isBase58Encoded, Secrets } from "../utils";
 
 export class Solana {
   private static connection: Connection;
 
   static init = () => {
-    Solana.connection = new Connection(clusterApiUrl("mainnet-beta"));
+    Solana.connection = new Connection(Secrets.quickNodeURL);
     console.log("SOLANA INITIALIZED...");
   };
 
@@ -32,5 +32,27 @@ export class Solana {
       mintAuthority: mintInfo.mintAuthority?.toBase58() ?? null,
       freezeAuthority: mintInfo.freezeAuthority?.toBase58() ?? null
     };
+  };
+
+  public static getTokenHolders = async (mintAddress: string) => {
+    const connection = Solana.connection;
+    const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+      filters: [
+        { dataSize: 165 },
+        {
+          memcmp: {
+            offset: 0,
+            bytes: mintAddress
+          }
+        }
+      ]
+    });
+
+    return accounts.map((account) => {
+      const accountData = AccountLayout.decode(account.account.data);
+      const owner = new PublicKey(accountData.owner).toBase58();
+      const amount = Number(accountData.amount); // This is in raw integer format (not uiAmount)
+      return { owner, amount };
+    });
   };
 }
