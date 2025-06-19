@@ -20,41 +20,23 @@ generator tsed {
 // mint_authority     String?   
 // minted_at          DateTime?
 // permanent_delegate String?   
-// coin_gecko_id String?   
+// coingecko_id String?   
 
 model Token {
-  id         String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  address    String    @unique @db.VarChar
-  logo_uri   String?   @db.VarChar
-  name       String    @db.VarChar
-  symbol     String    @db.VarChar
-  platform   Platform? @relation(fields: [platformId], references: [id])
-  tags       String[]  @default([])
-  metadata   Json
-  created_at DateTime  @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @updatedAt @db.Timestamp(6)
-  deleted_at DateTime? @db.Timestamp(6)
-  platformId String?   @db.VarChar
+  id          String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  address     String    @unique @db.VarChar
+  logo_uri    String?   @db.VarChar
+  name        String    @db.VarChar
+  symbol      String    @db.VarChar
+  tags        String[]  @default([])
+  metadata    Json
+  created_at  DateTime  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @updatedAt @db.Timestamp(6)
+  deleted_at  DateTime? @db.Timestamp(6)
+  platform_id String    @db.VarChar
 
   @@index([tags], type: Gin)
   @@index([created_at(sort: Desc)])
   @@index([updated_at(sort: Desc)])
   @@map("token")
-}
-
-model Platform {
-  id               String    @unique @db.VarChar
-  chain_identifier Int?      @db.Integer
-  name             String    @db.VarChar
-  shortname        String?   @db.VarChar
-  native_coin_id   String    @db.VarChar
-  images           Json
-  created_at       DateTime  @default(now()) @db.Timestamp(6)
-  updated_at       DateTime? @updatedAt @db.Timestamp(6)
-  deleted_at       DateTime? @db.Timestamp(6)
-  Token            Token[]
-
-  @@index([created_at(sort: Desc)])
-  @@index([updated_at(sort: Desc)])
-  @@map("platform")
 }

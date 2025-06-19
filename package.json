@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.7.0",
+    "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "@swc-node/register": "^1.10.10",
     "@swc/cli": "^0.7.5",

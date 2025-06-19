@@ -23,17 +23,15 @@ export class TokenService {
     });
   }
 
-  public async findByAddress<T extends Prisma.TokenInclude | undefined>(address: string, include?: T) {
+  public async findByAddress(address: string) {
     return prisma.token.findUnique({
-      where: { address },
-      include: include as T
+      where: { address }
     });
   }
 
-  public async findManyBySymbol<T extends Prisma.TokenInclude | undefined>(symbol: string, include?: T) {
+  public async findManyBySymbol(symbol: string) {
     return prisma.token.findMany({
-      where: { symbol },
-      include: include as T
+      where: { symbol }
     });
   }
 

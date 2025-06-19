@@ -4,13 +4,13 @@ import { Token } from "generated/prisma";
 export class TokenMetadata {
   @Required() public readonly decimals: number;
   @Required() public readonly daily_volume: number | null;
-  @Required() public readonly freeze_authority: string | null;
-  @Required() public readonly mint_authority: string | null;
+  @Required() public freeze_authority: string | null;
+  @Required() public mint_authority: string | null;
   @Required() public readonly minted_at: Date | null;
   @Required() public readonly permanent_delegate: string | null;
-  @Required() public readonly coin_gecko_id: string | null;
-  @Required() public readonly coin_gecko_verified: boolean;
-  @Required() public readonly impersonated: boolean;
+  @Required() public readonly coingecko_id: string | null;
+  @Required() public readonly impersonator: boolean;
+  @Required() public readonly mint_info_updated_at: number | null;
 }
 
 export class TokenModel {
@@ -20,7 +20,7 @@ export class TokenModel {
   @Required() public readonly logo_uri: string | null;
   @Required() public readonly name: string;
   @Required() public readonly symbol: string;
-  @Required() public readonly platformId: string;
+  @Required() public readonly platform_id: string;
   @Required() @CollectionOf(String) public readonly tags: string[];
   @Required() public readonly created_at: Date;
   @Required() public readonly updated_at: Date | null;
@@ -29,7 +29,6 @@ export class TokenModel {
   public static build(token: Token): TokenModel {
     return {
       ...token,
-      platformId: token.platformId!,
       metadata: token.metadata as unknown as TokenMetadata
     };
   }
@@ -41,8 +40,4 @@ export class TokenModel {
 
 export class Address {
   @Required() public readonly address: string;
-}
-
-export class SnifferModel {
-  @Required() public readonly impersonated: boolean;
 }

@@ -1,3 +1,3 @@
 export * from "./Token";
 export * from "./Global";
-export * from "./Platform";
+export * from "./Sniffer";

@@ -1,41 +1,56 @@
-import axios, { AxiosRequestConfig, Method } from "axios";
-import FormData from "form-data";
-import { URLSearchParams } from "url";
+import axios, { AxiosRequestConfig } from "axios";
 
 export interface RequestData {
   url: string;
-  method: Method;
+  method: "GET" | "POST" | "PUT" | "DELETE";
+  headers?: Record<string, string>;
   payload?: any;
-  query?: any;
-  headers?: any;
+  query?: Record<string, string | number | boolean>;
 }
 
-export const makeRequest = async (requestData: RequestData) => {
+export interface RequestResult<T = any> {
+  data: T;
+  status: number;
+}
+
+export class HttpError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+  }
+}
+
+export const makeRequest = async <T = any>(requestData: RequestData): Promise<RequestResult<T>> => {
   try {
     const options: AxiosRequestConfig = {
-      url: requestData.query ? `${requestData.url}?${new URLSearchParams(requestData.query)}` : requestData.url,
+      url: requestData.query ? `${requestData.url}?${new URLSearchParams(requestData.query as any)}` : requestData.url,
       method: requestData.method,
       headers: {
         ...(!(requestData.payload instanceof FormData) && { "Content-Type": "application/json" }),
-        ...(requestData.headers && requestData.headers)
+        ...(requestData.headers || {})
       },
       ...(requestData.method !== "GET" && requestData.payload && { data: requestData.payload })
     };
-    return (await axios(options)).data;
-  } catch (error) {
+
+    const response = await axios(options);
+    return {
+      data: response.data,
+      status: response.status
+    };
+  } catch (error: any) {
+    const status = error?.response?.status ?? 500;
+    let message = error.message;
+
     if (error?.response?.data) {
-      console.log("Error Data ---- ", error?.response?.data || "");
-      throw new Error(
-        error?.response?.data?.message ||
-          error?.response?.data?.error_message ||
-          error?.response?.data?.error?.message ||
-          (error?.response?.data?.error_msg
-            ? `${error?.response?.data?.data?.error_msg} ${error?.response?.data?.extra?.error_detail}`
-            : JSON.stringify(error.response.data))
-      );
-    } else {
-      console.log(error);
-      throw new Error(error.message);
+      const errData = error.response.data;
+      message =
+        errData?.message ||
+        errData?.error_message ||
+        errData?.error?.message ||
+        (errData?.error_msg ? `${errData?.data?.error_msg} ${errData?.extra?.error_detail}` : JSON.stringify(errData));
     }
+    throw new HttpError(message, status);
   }
 };
