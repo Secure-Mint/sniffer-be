@@ -1,46 +1,17 @@
 import { Prisma, PrismaPromise } from "generated/prisma";
-import { TokenService } from "../../services";
-import { makeRequest, sleep, Solana, SOLANA, STABLE_COIN } from "../../utils";
+import { TokenService, SolanaService, CoingeckoService } from "../../services";
+import { makeRequest, Solana, SOLANA, STABLE_COIN } from "../../utils";
 import { prisma } from "../../services";
 import { TokenMetadata } from "../../models";
-import { CoingeckoSimpleToken, JupiterToken, SPLToken } from "../../../types";
+import { CoingeckoSimpleToken, JupiterToken } from "../../../types";
 
 const tokenService = new TokenService();
+const coingeckoService = new CoingeckoService();
+const solanaService = new SolanaService(coingeckoService);
 
 const jupiterTokensURL = "https://lite-api.jup.ag/tokens/v1/all";
-const coinGeckoTokensURL = "https://api.coingecko.com/api/v3/coins/list";
-const SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 const CHUNK_SIZE = 500;
-
-const isStableOnCoingeckoByAddress = async (address: string): Promise<boolean> => {
-  try {
-    const { data: tokenDetail } = await makeRequest({
-      url: `https://api.coingecko.com/api/v3/coins/${SOLANA}/contract/${address}`,
-      method: "GET",
-      headers: { "x-cg-demo-api-key": process.env.COIN_GECKO_API_KEY || "" }
-    });
-    return tokenDetail.categories.includes("Stablecoins") && tokenDetail.platforms.solana === address;
-  } catch (err) {
-    return false;
-  }
-};
-
-async function fetchSPLStableCoins() {
-  console.log("FETCHING TOKENS FROM SPL ...");
-  const { data } = await makeRequest({ url: SPLTokensURL, method: "GET" });
-  const stableTagged = data.tokens.filter((token: SPLToken) => (token.tags || []).includes("stablecoin"));
-  console.log(`Tagged Stablecoins: ${stableTagged.length}`);
-
-  const verified: any[] = [];
-  for (const token of stableTagged) {
-    const id = token.extensions?.coingeckoId;
-    if (!id) continue;
-    if (await isStableOnCoingeckoByAddress(token.address)) verified.push(token);
-    await sleep(1500);
-  }
-  return verified;
-}
 
 const fetchJupiterTokens = async () => {
   console.log("FETCHING TOKENS FROM JUPITER ...");
@@ -49,23 +20,9 @@ const fetchJupiterTokens = async () => {
   return list;
 };
 
-const fetchCoingeckoTokens = async () => {
-  console.log("FETCHING TOKENS FROM COINGECKO ...");
-  const { data: list } = await makeRequest({
-    url: coinGeckoTokensURL,
-    method: "GET",
-    headers: { "x-cg-demo-api-key": process.env.COIN_GECKO_API_KEY || "" },
-    query: { include_platform: true }
-  });
-  console.log(`TOTAL COIN GECKO TOKENS: ${list.length} \n`);
-  const filtered = list.filter((x: any) => Boolean(x?.platforms?.solana));
-  console.log(`TOTAL SOLANA TOKENS ON COIN GECKO: ${filtered.length} \n`);
-  return filtered;
-};
-
 const fetchAndSaveTokens = async () => {
-  const stablecoins = await fetchSPLStableCoins();
-  const coinGeckoTokens: CoingeckoSimpleToken[] = await fetchCoingeckoTokens();
+  const stablecoins = await solanaService.fetchSPLStableCoins();
+  const coinGeckoTokens: CoingeckoSimpleToken[] = await coingeckoService.fetchCoingeckoTokens();
 
   const allJupiterTokens: JupiterToken[] = await fetchJupiterTokens();
 
