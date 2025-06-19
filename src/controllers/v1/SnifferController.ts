@@ -2,7 +2,7 @@ import { Controller, Inject } from "@tsed/di";
 import { Context, QueryParams } from "@tsed/platform-params";
 import { Get, Returns } from "@tsed/schema";
 import { Address, SnifferModel } from "../../models";
-import { TokenService } from "../../services/TokenService";
+import { TokenService } from "../../services";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
 import { Solana } from "../../utils";
@@ -15,7 +15,7 @@ export class SnifferController {
   @(Returns(200, SuccessResult).Of(SnifferModel))
   public async getTokenByAddress(@QueryParams() { address }: Address, @Context() ctx: Context) {
     const token = await this.tokenService.findByAddress(address);
-    if (!token) throw new NotFound("Address not found");
+    if (!token) throw new NotFound("Token not found");
     const tokenMetadata = this.tokenService.parseMetadata(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
     const mintData = await Solana.getMintAndFreezeAuthority(token.address);
@@ -39,7 +39,7 @@ export class SnifferController {
         address: token.address,
         dailyVolume: tokenMetadata.daily_volume || 0,
         tags: token.tags,
-        impersonator: sameSymbolTokens.length && tokenMetadata.impersonator,
+        impersonator: sameSymbolTokens.length && !tokenMetadata.coingecko_verified,
         freezeAuthority: Boolean(mintData.freezeAuthority),
         mintAuthority: Boolean(mintData.mintAuthority)
       },

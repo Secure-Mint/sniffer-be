@@ -9,7 +9,7 @@ export class TokenMetadata {
   @Required() public readonly minted_at: Date | null;
   @Required() public readonly permanent_delegate: string | null;
   @Required() public readonly coingecko_id: string | null;
-  @Required() public readonly impersonator: boolean;
+  @Required() public readonly coingecko_verified: boolean;
   @Required() public readonly mint_info_updated_at: number | null;
 }
 

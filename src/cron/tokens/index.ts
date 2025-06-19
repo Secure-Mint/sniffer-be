@@ -1,7 +1,7 @@
 import { Prisma, PrismaPromise } from "generated/prisma";
-import { TokenService } from "../../services/TokenService";
+import { TokenService } from "../../services";
 import { makeRequest, sleep, Solana, SOLANA, STABLE_COIN } from "../../utils";
-import { prisma } from "../../services/PrismaService";
+import { prisma } from "../../services";
 import { TokenMetadata } from "../../models";
 import { CoingeckoSimpleToken, JupiterToken, SPLToken } from "../../../types";
 
@@ -13,7 +13,7 @@ const SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/sr
 
 const CHUNK_SIZE = 500;
 
-const isStablecoinOnCoinGeckoById = async (id: string, address: string): Promise<boolean> => {
+const isStableOnCoingeckoByAddress = async (address: string): Promise<boolean> => {
   try {
     const { data: tokenDetail } = await makeRequest({
       url: `https://api.coingecko.com/api/v3/coins/${SOLANA}/contract/${address}`,
@@ -36,7 +36,7 @@ async function fetchSPLStableCoins() {
   for (const token of stableTagged) {
     const id = token.extensions?.coingeckoId;
     if (!id) continue;
-    if (await isStablecoinOnCoinGeckoById(id, token.address)) verified.push(token);
+    if (await isStableOnCoingeckoByAddress(token.address)) verified.push(token);
     await sleep(1500);
   }
   return verified;
@@ -95,7 +95,7 @@ const fetchAndSaveTokens = async () => {
 
       const metadata = {
         coingecko_id: coingeckoId || null,
-        impersonator: !tokenAddressMatched,
+        coingecko_verified: tokenAddressMatched,
         decimals: jupiterToken?.decimals || 0,
         freeze_authority: jupiterToken?.freeze_authority || null,
         mint_authority: jupiterToken?.mint_authority || null,
@@ -123,7 +123,7 @@ const fetchAndSaveTokens = async () => {
           })
         );
       } else if (
-        dbTokenMetadata.impersonator != metadata.impersonator ||
+        dbTokenMetadata.coingecko_verified != metadata.coingecko_verified ||
         dbTokenMetadata.mint_authority !== metadata.mint_authority ||
         dbTokenMetadata.freeze_authority !== metadata.freeze_authority ||
         dbTokenMetadata.coingecko_id !== metadata.coingecko_id
