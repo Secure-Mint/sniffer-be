@@ -33,6 +33,7 @@ export class CoingeckoService {
 
   @UseCache()
   public async fetchTokenByAddress(address: string): Promise<CoingeckoFullToken> {
+    console.log(`[CACHE TEST] Executing fetchTokenByAddress for ${address}`);
     const { data } = await makeRequest({
       url: `${this.baseURL}/coins/${SOLANA}/contract/${address}`,
       method: "GET",

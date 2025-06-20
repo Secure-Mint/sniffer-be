@@ -5,7 +5,7 @@ import "@tsed/swagger";
 
 import { join } from "node:path";
 
-import { Configuration } from "@tsed/di";
+import { Configuration, Injectable, OnInit } from "@tsed/di";
 import { application } from "@tsed/platform-http";
 
 import { PlatformCache } from "@tsed/platform-cache";
@@ -14,6 +14,7 @@ import redisStore from "cache-manager-ioredis";
 import { config } from "./config";
 import * as v1 from "./controllers/v1";
 import { envs } from "./config/envs";
+import { RedisShutdownService } from "./services/RedisShutdownService";
 
 @Configuration({
   ...config,
@@ -23,18 +24,12 @@ import { envs } from "./config/envs";
   mount: {
     "/v1": [...Object.values(v1)]
   },
-  cache:
-    envs.NODE_ENV === "development"
-      ? { store: "memory", ttl: 300 }
-      : {
-          store: redisStore.create(),
-          options: {
-            host: envs.REDIS_HOST,
-            port: envs.REDIS_PORT,
-            ttl: envs.REDIS_TTL
-          }
-        },
-  imports: [PlatformCache],
+  cache: {
+    ttl: envs.REDIS_TTL,
+    store: redisStore.create({ host: envs.REDIS_HOST, port: envs.REDIS_PORT }),
+    prefix: process.env.NODE_ENV
+  },
+  imports: [PlatformCache, RedisShutdownService],
   swagger: [
     {
       path: "/v1/docs",

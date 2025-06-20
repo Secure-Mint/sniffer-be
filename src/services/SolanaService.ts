@@ -55,7 +55,8 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async getTokenHolders(mintAddress: string) {
+  public async getTop50TokenHolders(mintAddress: string) {
+    console.log(`[CACHE TEST] Executing getTopTokenHolders for ${mintAddress}`);
     const connection = Solana.connection;
     const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
       filters: [
@@ -69,11 +70,25 @@ export class SolanaService {
       ]
     });
 
-    return accounts.map((account) => {
+    const topHolders: { owner: string; amount: number }[] = [];
+    const MAX_TOP = 50;
+
+    for (const account of accounts) {
       const accountData = AccountLayout.decode(account.account.data);
       const owner = new PublicKey(accountData.owner).toBase58();
-      const amount = Number(accountData.amount); // This is in raw integer format (not uiAmount)
-      return { owner, amount };
-    });
+      const amount = Number(accountData.amount);
+
+      if (amount === 0) continue; // optionally skip zero balances
+
+      if (topHolders.length < MAX_TOP) {
+        topHolders.push({ owner, amount });
+        topHolders.sort((a, b) => a.amount - b.amount); // maintain min heap
+      } else if (amount > topHolders[0].amount) {
+        topHolders[0] = { owner, amount };
+        topHolders.sort((a, b) => a.amount - b.amount);
+      }
+    }
+
+    return topHolders.sort((a, b) => b.amount - a.amount);
   }
 }
