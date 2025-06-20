@@ -4,8 +4,7 @@ import "@tsed/ajv";
 import "@tsed/swagger";
 
 import { join } from "node:path";
-
-import { Configuration, Injectable, OnInit } from "@tsed/di";
+import { Configuration } from "@tsed/di";
 import { application } from "@tsed/platform-http";
 
 import { PlatformCache } from "@tsed/platform-cache";
@@ -20,7 +19,7 @@ import { RedisShutdownService } from "./services/RedisShutdownService";
   ...config,
   acceptMimes: ["application/json"],
   httpPort: process.env.PORT || 4001,
-  httpsPort: false, // CHANGE
+  httpsPort: false,
   mount: {
     "/v1": [...Object.values(v1)]
   },
@@ -44,13 +43,7 @@ import { RedisShutdownService } from "./services/RedisShutdownService";
     "method-override",
     "json-parser",
     { use: "urlencoded-parser", options: { extended: true } }
-  ],
-  views: {
-    root: join(process.cwd(), "../views"),
-    extensions: {
-      ejs: "ejs"
-    }
-  }
+  ]
 })
 export class Server {
   protected app = application();
