@@ -4,6 +4,7 @@ import { getMint, AccountLayout, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { CoingeckoService } from "./CoingeckoService";
 import { SPLToken } from "types";
+import { UseCache } from "@tsed/platform-cache";
 
 @Injectable()
 export class SolanaService {
@@ -27,6 +28,7 @@ export class SolanaService {
     return verified;
   }
 
+  @UseCache()
   public async fetchAccountInfo(mintAddress: string) {
     try {
       if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
@@ -41,6 +43,7 @@ export class SolanaService {
     }
   }
 
+  @UseCache()
   public async getMintAndFreezeAuthority(mintAddress: string) {
     const mintInfo = await getMint(Solana.connection, new PublicKey(mintAddress));
 
@@ -51,6 +54,7 @@ export class SolanaService {
     };
   }
 
+  @UseCache()
   public async getTokenHolders(mintAddress: string) {
     const connection = Solana.connection;
     const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {

@@ -22,8 +22,8 @@ export class SnifferController {
     const tokenMetadata = this.tokenService.parseMetadata(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
 
-    // const tokenHolders = await this.solanaService.getTokenHolders(token.address);
-    // console.log(tokenHolders);
+    const tokenHolders = await this.solanaService.getTokenHolders(token.address);
+    console.log(tokenHolders);
 
     const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
     console.log("coingecko token", tokenData);
