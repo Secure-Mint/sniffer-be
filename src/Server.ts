@@ -8,8 +8,12 @@ import { join } from "node:path";
 import { Configuration } from "@tsed/di";
 import { application } from "@tsed/platform-http";
 
-import { config } from "./config/index";
-import * as v1 from "./controllers/v1/index";
+import { PlatformCache } from "@tsed/platform-cache";
+import redisStore from "cache-manager-ioredis";
+
+import { config } from "./config";
+import * as v1 from "./controllers/v1";
+import { envs } from "./config/envs";
 
 @Configuration({
   ...config,
@@ -19,6 +23,18 @@ import * as v1 from "./controllers/v1/index";
   mount: {
     "/v1": [...Object.values(v1)]
   },
+  cache:
+    envs.NODE_ENV === "development"
+      ? { store: "memory", ttl: 300 }
+      : {
+          store: redisStore.create(),
+          options: {
+            host: envs.REDIS_HOST,
+            port: envs.REDIS_PORT,
+            ttl: envs.REDIS_TTL
+          }
+        },
+  imports: [PlatformCache],
   swagger: [
     {
       path: "/v1/docs",

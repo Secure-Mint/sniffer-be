@@ -11,7 +11,7 @@ export class SolanaService {
 
   constructor(private coingeckoService: CoingeckoService) {}
 
-  public fetchSPLStableCoins = async () => {
+  public async fetchSPLStableCoins() {
     console.log("FETCHING TOKENS FROM SPL ...");
     const { data } = await makeRequest({ url: this.SPLTokensURL, method: "GET" });
     const stableTagged = data.tokens.filter((token: SPLToken) => (token.tags || []).includes("stablecoin"));
@@ -25,9 +25,9 @@ export class SolanaService {
       await sleep(1500);
     }
     return verified;
-  };
+  }
 
-  public fetchAccountInfo = async (mintAddress: string) => {
+  public async fetchAccountInfo(mintAddress: string) {
     try {
       if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
       const publicKey = new PublicKey(mintAddress);
@@ -39,9 +39,9 @@ export class SolanaService {
     } catch (error) {
       console.error("Error fetching account info:", error);
     }
-  };
+  }
 
-  public getMintAndFreezeAuthority = async (mintAddress: string) => {
+  public async getMintAndFreezeAuthority(mintAddress: string) {
     const mintInfo = await getMint(Solana.connection, new PublicKey(mintAddress));
 
     return {
@@ -49,9 +49,9 @@ export class SolanaService {
       mintAuthority: mintInfo.mintAuthority?.toBase58() ?? null,
       freezeAuthority: mintInfo.freezeAuthority?.toBase58() ?? null
     };
-  };
+  }
 
-  public getTokenHolders = async (mintAddress: string) => {
+  public async getTokenHolders(mintAddress: string) {
     const connection = Solana.connection;
     const accounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
       filters: [
@@ -71,5 +71,5 @@ export class SolanaService {
       const amount = Number(accountData.amount); // This is in raw integer format (not uiAmount)
       return { owner, amount };
     });
-  };
+  }
 }

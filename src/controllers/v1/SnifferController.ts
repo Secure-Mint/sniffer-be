@@ -26,7 +26,7 @@ export class SnifferController {
     // console.log(tokenHolders);
 
     const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
-    console.log(tokenData);
+    console.log("coingecko token", tokenData);
 
     if (!tokenMetadata?.mint_info_updated_at) {
       const mintData = await this.solanaService.getMintAndFreezeAuthority(token.address);

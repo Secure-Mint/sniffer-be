@@ -11,5 +11,4 @@ export const config: Partial<TsED.Configuration> = {
     returnsCoercedValues: true
   },
   logger: loggerConfig
-  // additional shared configuration
 };
