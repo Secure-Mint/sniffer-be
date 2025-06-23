@@ -2,7 +2,7 @@ import { Injectable } from "@tsed/di";
 import { prisma } from "./PrismaService";
 import { TokenMetadata, TokenModel } from "../models";
 import { Prisma, Token } from "generated/prisma";
-import { isValidUUID } from "../utils";
+import { UseCache } from "@tsed/platform-cache";
 
 @Injectable()
 export class TokenService {
@@ -23,6 +23,7 @@ export class TokenService {
     });
   }
 
+  @UseCache()
   public async findByAddress(address: string) {
     return prisma.token.findUnique({
       where: { address }

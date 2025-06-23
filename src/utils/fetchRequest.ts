@@ -45,11 +45,7 @@ export const makeRequest = async <T = any>(requestData: RequestData): Promise<Re
 
     if (error?.response?.data) {
       const errData = error.response.data;
-      message =
-        errData?.message ||
-        errData?.error_message ||
-        errData?.error?.message ||
-        (errData?.error_msg ? `${errData?.data?.error_msg} ${errData?.extra?.error_detail}` : JSON.stringify(errData));
+      message = errData?.message || errData?.error?.message || errData.error;
     }
     throw new HttpError(message, status);
   }

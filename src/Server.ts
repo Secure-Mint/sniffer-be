@@ -24,8 +24,7 @@ import { RedisShutdownService } from "./services/RedisShutdownService";
     "/v1": [...Object.values(v1)]
   },
   cache: {
-    ttl: envs.REDIS_TTL,
-    store: redisStore.create({ host: envs.REDIS_HOST, port: envs.REDIS_PORT }),
+    store: redisStore.create({ host: envs.REDIS_HOST, port: envs.REDIS_PORT, ttl: envs.REDIS_TTL }),
     prefix: process.env.NODE_ENV
   },
   imports: [PlatformCache, RedisShutdownService],

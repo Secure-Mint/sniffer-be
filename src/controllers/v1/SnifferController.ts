@@ -7,6 +7,7 @@ import { TokenService } from "../../services/TokenService";
 import { CoingeckoService } from "../../services/CoingeckoService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
+import { HttpError } from "../../utils";
 
 @Controller("/sniffer")
 export class SnifferController {
@@ -23,10 +24,12 @@ export class SnifferController {
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
 
     const tokenHolders = await this.solanaService.getTop50TokenHolders(token.address);
-    // console.log(tokenHolders);
-
-    const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
-    // console.log("coingecko token", tokenData);
+    try {
+      const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
+    } catch (error) {
+      const formattedError = error as unknown as HttpError;
+      console.log(formattedError.message, formattedError.status);
+    }
 
     if (!tokenMetadata?.mint_info_updated_at) {
       const mintData = await this.solanaService.getMintAndFreezeAuthority(token.address);
