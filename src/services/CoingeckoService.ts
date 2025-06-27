@@ -9,16 +9,14 @@ export class CoingeckoService {
   public baseURL = "https://api.coingecko.com/api/v3";
 
   public async fetchTokens() {
-    console.log("FETCHING TOKENS FROM COINGECKO ...");
     const { data: list } = await makeRequest({
       url: `${this.baseURL}/coins/list`,
       method: "GET",
       headers: { "x-cg-demo-api-key": envs.COIN_GECKO_API_KEY },
       query: { include_platform: true }
     });
-    console.log(`TOTAL COIN GECKO TOKENS: ${list.length} \n`);
+
     const filtered = list.filter((x: any) => Boolean(x?.platforms?.solana));
-    console.log(`TOTAL SOLANA TOKENS ON COIN GECKO: ${filtered.length} \n`);
     return filtered;
   }
 

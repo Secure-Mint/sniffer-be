@@ -911,6 +911,7 @@ export namespace Prisma {
     symbol: number
     tags: number
     metadata: number
+    info: number
     created_at: number
     updated_at: number
     deleted_at: number
@@ -951,6 +952,7 @@ export namespace Prisma {
     symbol?: true
     tags?: true
     metadata?: true
+    info?: true
     created_at?: true
     updated_at?: true
     deleted_at?: true
@@ -1038,6 +1040,7 @@ export namespace Prisma {
     symbol: string
     tags: string[]
     metadata: JsonValue
+    info: JsonValue
     created_at: Date
     updated_at: Date | null
     deleted_at: Date | null
@@ -1069,6 +1072,7 @@ export namespace Prisma {
     symbol?: boolean
     tags?: boolean
     metadata?: boolean
+    info?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
@@ -1083,6 +1087,7 @@ export namespace Prisma {
     symbol?: boolean
     tags?: boolean
     metadata?: boolean
+    info?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
@@ -1097,6 +1102,7 @@ export namespace Prisma {
     symbol?: boolean
     tags?: boolean
     metadata?: boolean
+    info?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
@@ -1111,13 +1117,14 @@ export namespace Prisma {
     symbol?: boolean
     tags?: boolean
     metadata?: boolean
+    info?: boolean
     created_at?: boolean
     updated_at?: boolean
     deleted_at?: boolean
     platform_id?: boolean
   }
 
-  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "logo_uri" | "name" | "symbol" | "tags" | "metadata" | "created_at" | "updated_at" | "deleted_at" | "platform_id", ExtArgs["result"]["token"]>
+  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "logo_uri" | "name" | "symbol" | "tags" | "metadata" | "info" | "created_at" | "updated_at" | "deleted_at" | "platform_id", ExtArgs["result"]["token"]>
 
   export type $TokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Token"
@@ -1130,6 +1137,7 @@ export namespace Prisma {
       symbol: string
       tags: string[]
       metadata: Prisma.JsonValue
+      info: Prisma.JsonValue
       created_at: Date
       updated_at: Date | null
       deleted_at: Date | null
@@ -1564,6 +1572,7 @@ export namespace Prisma {
     readonly symbol: FieldRef<"Token", 'String'>
     readonly tags: FieldRef<"Token", 'String[]'>
     readonly metadata: FieldRef<"Token", 'Json'>
+    readonly info: FieldRef<"Token", 'Json'>
     readonly created_at: FieldRef<"Token", 'DateTime'>
     readonly updated_at: FieldRef<"Token", 'DateTime'>
     readonly deleted_at: FieldRef<"Token", 'DateTime'>
@@ -1956,6 +1965,7 @@ export namespace Prisma {
     symbol: 'symbol',
     tags: 'tags',
     metadata: 'metadata',
+    info: 'info',
     created_at: 'created_at',
     updated_at: 'updated_at',
     deleted_at: 'deleted_at',
@@ -2080,6 +2090,7 @@ export namespace Prisma {
     symbol?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     metadata?: JsonFilter<"Token">
+    info?: JsonFilter<"Token">
     created_at?: DateTimeFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
@@ -2094,6 +2105,7 @@ export namespace Prisma {
     symbol?: SortOrder
     tags?: SortOrder
     metadata?: SortOrder
+    info?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
     deleted_at?: SortOrderInput | SortOrder
@@ -2111,6 +2123,7 @@ export namespace Prisma {
     symbol?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     metadata?: JsonFilter<"Token">
+    info?: JsonFilter<"Token">
     created_at?: DateTimeFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableFilter<"Token"> | Date | string | null
@@ -2125,6 +2138,7 @@ export namespace Prisma {
     symbol?: SortOrder
     tags?: SortOrder
     metadata?: SortOrder
+    info?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrderInput | SortOrder
     deleted_at?: SortOrderInput | SortOrder
@@ -2145,6 +2159,7 @@ export namespace Prisma {
     symbol?: StringWithAggregatesFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
     metadata?: JsonWithAggregatesFilter<"Token">
+    info?: JsonWithAggregatesFilter<"Token">
     created_at?: DateTimeWithAggregatesFilter<"Token"> | Date | string
     updated_at?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
     deleted_at?: DateTimeNullableWithAggregatesFilter<"Token"> | Date | string | null
@@ -2158,7 +2173,8 @@ export namespace Prisma {
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
-    metadata: JsonNullValueInput | InputJsonValue
+    metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
@@ -2172,7 +2188,8 @@ export namespace Prisma {
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
-    metadata: JsonNullValueInput | InputJsonValue
+    metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
@@ -2187,6 +2204,7 @@ export namespace Prisma {
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2201,6 +2219,7 @@ export namespace Prisma {
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2214,7 +2233,8 @@ export namespace Prisma {
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
-    metadata: JsonNullValueInput | InputJsonValue
+    metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: Date | string
     updated_at?: Date | string | null
     deleted_at?: Date | string | null
@@ -2229,6 +2249,7 @@ export namespace Prisma {
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2243,6 +2264,7 @@ export namespace Prisma {
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
     metadata?: JsonNullValueInput | InputJsonValue
+    info?: JsonNullValueInput | InputJsonValue
     created_at?: DateTimeFieldUpdateOperationsInput | Date | string
     updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     deleted_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2357,6 +2379,7 @@ export namespace Prisma {
     symbol?: SortOrder
     tags?: SortOrder
     metadata?: SortOrder
+    info?: SortOrder
     created_at?: SortOrder
     updated_at?: SortOrder
     deleted_at?: SortOrder

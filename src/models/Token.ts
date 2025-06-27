@@ -1,7 +1,7 @@
 import { CollectionOf, Required } from "@tsed/schema";
 import { Token } from "generated/prisma";
 
-export class TokenMetadata {
+export class TokenExtendedInfo {
   @Required() public readonly decimals: number;
   @Required() public readonly daily_volume: number | null;
   @Required() public freeze_authority: string | null;
@@ -16,7 +16,8 @@ export class TokenMetadata {
 export class TokenModel {
   @Required() public readonly id: string;
   @Required() public readonly address: string;
-  @Required() public readonly metadata: TokenMetadata;
+  @Required() public readonly info: TokenExtendedInfo;
+  @Required() public readonly metadata: JSON;
   @Required() public readonly logo_uri: string | null;
   @Required() public readonly name: string;
   @Required() public readonly symbol: string;
@@ -29,7 +30,8 @@ export class TokenModel {
   public static build(token: Token): TokenModel {
     return {
       ...token,
-      metadata: token.metadata as unknown as TokenMetadata
+      info: token.info as unknown as TokenExtendedInfo,
+      metadata: token.metadata as unknown as JSON
     };
   }
 

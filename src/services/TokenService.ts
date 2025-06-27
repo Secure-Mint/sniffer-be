@@ -1,6 +1,6 @@
 import { Injectable } from "@tsed/di";
 import { prisma } from "./PrismaService";
-import { TokenMetadata, TokenModel } from "../models";
+import { TokenExtendedInfo, TokenModel } from "../models";
 import { Prisma, Token } from "generated/prisma";
 import { UseCache } from "@tsed/platform-cache";
 
@@ -8,7 +8,12 @@ import { UseCache } from "@tsed/platform-cache";
 export class TokenService {
   public async create(token: TokenModel) {
     return prisma.token.create({
-      data: { ...token, metadata: token.metadata as unknown as Prisma.JsonObject, updated_at: new Date() }
+      data: {
+        ...token,
+        info: token.info as unknown as Prisma.JsonObject,
+        metadata: token.metadata as unknown as Prisma.JsonObject,
+        updated_at: new Date()
+      }
     });
   }
 
@@ -17,6 +22,7 @@ export class TokenService {
       where: { address: token.address },
       data: {
         ...token,
+        info: token.info as unknown as Prisma.JsonObject,
         metadata: token.metadata as unknown as Prisma.JsonObject,
         updated_at: token.updated_at ? new Date(token.updated_at) : new Date()
       }
@@ -36,7 +42,7 @@ export class TokenService {
     });
   }
 
-  public parseMetadata(token: Token) {
-    return token.metadata as unknown as TokenMetadata;
+  public parsedInfo(token: Token) {
+    return token.info as unknown as TokenExtendedInfo;
   }
 }

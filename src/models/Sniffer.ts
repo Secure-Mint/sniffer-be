@@ -5,6 +5,11 @@ export class SnifferModel {
   @Required() public readonly name: string;
   @Required() public readonly address: string;
   @Required() public readonly dailyVolume: number;
+  @Required() public readonly totalSupply: number;
+  @Required() public readonly circulatingSupply: number;
+  @Required() public readonly totalHolders: number;
+  @Required() public readonly top50HolderSupplyPercentage: number;
+  @Required() public readonly top10HolderSupplyPercentage: number;
   @Required() public readonly impersonator: boolean;
   @Required() public readonly freezeAuthority: boolean;
   @Required() public readonly mintAuthority: boolean;

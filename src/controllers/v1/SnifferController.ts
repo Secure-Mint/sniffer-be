@@ -4,46 +4,50 @@ import { Get, Returns } from "@tsed/schema";
 import { Address, SnifferModel } from "../../models";
 import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
-import { CoingeckoService } from "../../services/CoingeckoService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
-import { HttpError } from "../../utils";
+import { fixDecimals } from "../../utils";
 
 @Controller("/sniffer")
 export class SnifferController {
   @Inject() private tokenService: TokenService;
   @Inject() private solanaService: SolanaService;
-  @Inject() private coingeckoService: CoingeckoService;
 
   @Get("")
   @(Returns(200, SuccessResult).Of(SnifferModel))
   public async getTokenByAddress(@QueryParams() { address }: Address, @Context() ctx: Context) {
     const token = await this.tokenService.findByAddress(address);
     if (!token) throw new NotFound("Token not found");
-    const tokenMetadata = this.tokenService.parseMetadata(token);
+    const tokenInfo = this.tokenService.parsedInfo(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
 
-    const tokenHolders = await this.solanaService.getTop50TokenHolders(token.address);
-    try {
-      const tokenData = await this.coingeckoService.fetchTokenByAddress(token.address);
-    } catch (error) {
-      const formattedError = error as unknown as HttpError;
-      console.log(formattedError.message, formattedError.status);
-    }
+    const { totalSupply, decimals } = await this.solanaService.getTokenMetadata(token.address);
 
-    if (!tokenMetadata?.mint_info_updated_at) {
+    const { circulatingSupply, top50HoldersAmount, top10HoldersAmount, totalHolders } = await this.solanaService.getTokenHolders(
+      token.address,
+      decimals
+    );
+
+    // const tokenRestrictions = await this.solanaService.checkTokenTransferRestrictions(token.address);
+    // console.log(tokenRestrictions);
+
+    const top50HolderSupplyPercentage = fixDecimals((top50HoldersAmount / circulatingSupply) * 100, 2);
+    const top10HolderSupplyPercentage = fixDecimals((top10HoldersAmount / circulatingSupply) * 100, 2);
+
+    if (!tokenInfo?.mint_info_updated_at) {
       const mintData = await this.solanaService.getMintAndFreezeAuthority(token.address);
       await this.tokenService.update({
         ...token,
-        metadata: {
-          ...tokenMetadata,
+        metadata: token.metadata as unknown as JSON,
+        info: {
+          ...tokenInfo,
           mint_authority: mintData.mintAuthority,
           freeze_authority: mintData.freezeAuthority,
           mint_info_updated_at: new Date().getTime()
         }
       });
-      tokenMetadata.mint_authority = mintData.mintAuthority;
-      tokenMetadata.freeze_authority = mintData.freezeAuthority;
+      tokenInfo.mint_authority = mintData.mintAuthority;
+      tokenInfo.freeze_authority = mintData.freezeAuthority;
     }
 
     return new SuccessResult(
@@ -51,11 +55,16 @@ export class SnifferController {
         symbol: token.symbol,
         name: token.name,
         address: token.address,
-        dailyVolume: tokenMetadata.daily_volume || 0,
+        dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
+        totalSupply,
+        circulatingSupply,
+        totalHolders: totalHolders || 0,
+        top10HolderSupplyPercentage,
+        top50HolderSupplyPercentage,
         tags: token.tags,
-        impersonator: sameSymbolTokens.length && !tokenMetadata.coingecko_verified,
-        freezeAuthority: Boolean(tokenMetadata.freeze_authority),
-        mintAuthority: Boolean(tokenMetadata.mint_authority)
+        impersonator: sameSymbolTokens.length && !tokenInfo.coingecko_verified,
+        freezeAuthority: Boolean(tokenInfo.freeze_authority),
+        mintAuthority: Boolean(tokenInfo.mint_authority)
       },
       SnifferModel
     );
