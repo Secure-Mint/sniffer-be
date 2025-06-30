@@ -13,6 +13,21 @@ interface TokenRestrictionCheckResult {
   warnings: string[];
 }
 
+interface AccountInfo {
+  data: {
+    mintAuthority: string | null;
+    supply: number;
+    decimals: number;
+    isInitialized: boolean;
+    freezeAuthority: string | null;
+  };
+  executable: boolean;
+  lamports: number;
+  owner: string;
+  rentEpoch: number | null;
+  totalSupply: number;
+}
+
 @Injectable()
 export class SolanaService {
   public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
@@ -33,51 +48,39 @@ export class SolanaService {
     return verified;
   }
 
-  @UseCache({ ttl: -1 })
-  private async fetchAccountInfo(mintAddress: string) {
+  @UseCache()
+  public async fetchAccountInfo(mintAddress: string): Promise<AccountInfo | null> {
     console.log(`[CACHE CHECK] Executing fetchAccountInfo for ${mintAddress}`);
     if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
+
     const publicKey = new PublicKey(mintAddress);
     const accountInfo = await Solana.connection.getAccountInfo(publicKey);
     if (!accountInfo) return null;
-    return accountInfo;
-  }
 
-  private async getMintAccountInfo(mintAddress: string): Promise<{
-    dataBuffer: Buffer;
-    owner: string;
-    lamports: number;
-    executable: boolean;
-  } | null> {
-    const mintAccountInfo = await this.fetchAccountInfo(mintAddress);
-    if (!mintAccountInfo) return null;
-
-    const rawData: unknown = mintAccountInfo.data;
-
-    let dataBuffer: Buffer;
-    if (Buffer.isBuffer(rawData)) {
-      dataBuffer = rawData;
-    } else if (rawData && typeof rawData === "object" && "data" in rawData && Array.isArray((rawData as any).data)) {
-      dataBuffer = Buffer.from((rawData as any).data);
-    } else {
-      throw new Error("Invalid or corrupted account data");
-    }
-
-    const owner =
-      mintAccountInfo.owner instanceof PublicKey ? mintAccountInfo.owner.toBase58() : new PublicKey(mintAccountInfo.owner).toBase58();
+    const decoded = MintLayout.decode(accountInfo.data);
+    const mintAuthority = decoded.mintAuthorityOption === 0 ? null : new PublicKey(decoded.mintAuthority);
+    const freezeAuthority = decoded.freezeAuthorityOption === 0 ? null : new PublicKey(decoded.freezeAuthority);
 
     return {
-      dataBuffer,
-      owner,
-      lamports: mintAccountInfo.lamports,
-      executable: mintAccountInfo.executable
+      data: {
+        mintAuthority: mintAuthority ? mintAuthority.toBase58() : null,
+        supply: Number(decoded.supply.toString()),
+        decimals: decoded.decimals,
+        isInitialized: decoded.isInitialized,
+        freezeAuthority: freezeAuthority ? freezeAuthority.toBase58() : null
+      },
+      executable: accountInfo.executable,
+      lamports: accountInfo.lamports,
+      owner: accountInfo.owner.toBase58(),
+      rentEpoch: accountInfo.rentEpoch || null,
+      totalSupply: Number(decoded.supply.toString()) / Math.pow(10, decoded.decimals)
     };
   }
 
   public async getMintAndFreezeAuthority(mintAddress: string) {
     const publicKey = new PublicKey(mintAddress);
 
-    const accountInfo = await this.getMintAccountInfo(mintAddress);
+    const accountInfo = await this.fetchAccountInfo(mintAddress);
     if (!accountInfo) throw new HttpError("Mint address not found", 404);
 
     if (!new PublicKey(accountInfo.owner).equals(TOKEN_PROGRAM_ID)) {
@@ -92,18 +95,6 @@ export class SolanaService {
       freezeAuthority: mintInfo.freezeAuthority?.toBase58() ?? null
     };
   }
-
-  @UseCache({ ttl: -1 })
-  getTokenMetadata = async (mintAddress: string) => {
-    const accountInfo = await this.getMintAccountInfo(mintAddress);
-    if (!accountInfo) throw new HttpError("Mint address not found", 404);
-
-    const data = MintLayout.decode(accountInfo.dataBuffer);
-    const supply = Number(data.supply);
-    const decimals = data.decimals;
-
-    return { totalSupply: supply / Math.pow(10, decimals), rawSupply: supply, decimals, programId: accountInfo.owner };
-  };
 
   @UseCache()
   public async getTokenHolders(mintAddress: string, decimals: number) {

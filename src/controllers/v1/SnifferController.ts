@@ -21,11 +21,13 @@ export class SnifferController {
     const tokenInfo = this.tokenService.parsedInfo(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
 
-    const { totalSupply, decimals } = await this.solanaService.getTokenMetadata(token.address);
+    const tokenMetadata = await this.solanaService.fetchAccountInfo(token.address);
+
+    console.log(tokenMetadata);
 
     const { circulatingSupply, top50HoldersAmount, top10HoldersAmount, totalHolders } = await this.solanaService.getTokenHolders(
       token.address,
-      decimals
+      tokenMetadata?.data.decimals || 0
     );
 
     // const tokenRestrictions = await this.solanaService.checkTokenTransferRestrictions(token.address);
@@ -34,37 +36,21 @@ export class SnifferController {
     const top50HolderSupplyPercentage = fixDecimals((top50HoldersAmount / circulatingSupply) * 100, 2);
     const top10HolderSupplyPercentage = fixDecimals((top10HoldersAmount / circulatingSupply) * 100, 2);
 
-    if (!tokenInfo?.mint_info_updated_at) {
-      const mintData = await this.solanaService.getMintAndFreezeAuthority(token.address);
-      await this.tokenService.update({
-        ...token,
-        metadata: token.metadata as unknown as JSON,
-        info: {
-          ...tokenInfo,
-          mint_authority: mintData.mintAuthority,
-          freeze_authority: mintData.freezeAuthority,
-          mint_info_updated_at: new Date().getTime()
-        }
-      });
-      tokenInfo.mint_authority = mintData.mintAuthority;
-      tokenInfo.freeze_authority = mintData.freezeAuthority;
-    }
-
     return new SuccessResult(
       {
         symbol: token.symbol,
         name: token.name,
         address: token.address,
         dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
-        totalSupply,
+        totalSupply: tokenMetadata?.totalSupply || 0,
         circulatingSupply,
         totalHolders: totalHolders || 0,
         top10HolderSupplyPercentage,
         top50HolderSupplyPercentage,
         tags: token.tags,
         impersonator: sameSymbolTokens.length && !tokenInfo.coingecko_verified,
-        freezeAuthority: Boolean(tokenInfo.freeze_authority),
-        mintAuthority: Boolean(tokenInfo.mint_authority)
+        freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),
+        mintAuthority: Boolean(tokenMetadata?.data.mintAuthority)
       },
       SnifferModel
     );

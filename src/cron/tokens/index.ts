@@ -57,8 +57,6 @@ const fetchAndSaveTokens = async () => {
         coingecko_id: coingeckoId || null,
         coingecko_verified: tokenAddressMatched,
         decimals: jupiterToken?.decimals || 0,
-        freeze_authority: jupiterToken?.freeze_authority || null,
-        mint_authority: jupiterToken?.mint_authority || null,
         minted_at: jupiterToken?.minted_at || null,
         permanent_delegate: jupiterToken?.permanent_delegate || null,
         daily_volume: jupiterToken?.daily_volume || 0,
@@ -82,12 +80,7 @@ const fetchAndSaveTokens = async () => {
             }
           })
         );
-      } else if (
-        dbTokenInfo.coingecko_verified != info.coingecko_verified ||
-        dbTokenInfo.mint_authority !== info.mint_authority ||
-        dbTokenInfo.freeze_authority !== info.freeze_authority ||
-        dbTokenInfo.coingecko_id !== info.coingecko_id
-      ) {
+      } else if (dbTokenInfo.coingecko_id !== info.coingecko_id || dbTokenInfo.coingecko_verified != info.coingecko_verified) {
         prismaPromises.push(
           prisma.token.update({
             where: { id: dbToken?.id },

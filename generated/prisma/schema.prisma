@@ -12,12 +12,10 @@ generator tsed {
   provider = "tsed-prisma"
 }
 
-// These are all metadata fields inside Token model
+// These are all info fields inside Token model
 //
 // daily_volume       Float?    
 // decimals           Int       
-// freeze_authority   String?   
-// mint_authority     String?   
 // minted_at          DateTime?
 // permanent_delegate String?   
 // coingecko_id String?   

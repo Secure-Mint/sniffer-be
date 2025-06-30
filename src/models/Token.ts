@@ -4,13 +4,10 @@ import { Token } from "generated/prisma";
 export class TokenExtendedInfo {
   @Required() public readonly decimals: number;
   @Required() public readonly daily_volume: number | null;
-  @Required() public freeze_authority: string | null;
-  @Required() public mint_authority: string | null;
   @Required() public readonly minted_at: Date | null;
   @Required() public readonly permanent_delegate: string | null;
   @Required() public readonly coingecko_id: string | null;
   @Required() public readonly coingecko_verified: boolean;
-  @Required() public readonly mint_info_updated_at: number | null;
 }
 
 export class TokenModel {
