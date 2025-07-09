@@ -41,12 +41,7 @@ export const makeRequest = async <T = any>(requestData: RequestData): Promise<Re
     };
   } catch (error: any) {
     const status = error?.response?.status ?? 500;
-    let message = error.message;
-
-    if (error?.response?.data) {
-      const errData = error.response.data;
-      message = errData?.message || errData?.error?.message || errData.error;
-    }
-    throw new HttpError(message, status);
+    const safeMessage = typeof error.message === "string" && error.message.length < 1000 ? error.message : "Request failed";
+    throw new HttpError(safeMessage, status);
   }
 };

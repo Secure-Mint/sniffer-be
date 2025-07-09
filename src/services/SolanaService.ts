@@ -43,7 +43,7 @@ export class SolanaService {
       const id = token.extensions?.coingeckoId;
       if (!id) continue;
       if (await this.coingeckoService.isStableCoin(token.address)) verified.push(token);
-      await sleep(1500);
+      await sleep(2500);
     }
     return verified;
   }

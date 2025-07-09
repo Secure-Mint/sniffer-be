@@ -37,6 +37,8 @@ model Token {
   platform_id String    @db.VarChar
 
   @@index([tags], type: Gin)
+  @@index([info], type: Gin)
+  @@index([metadata], type: Gin)
   @@index([created_at(sort: Desc)])
   @@index([updated_at(sort: Desc)])
   @@map("token")
