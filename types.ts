@@ -1,3 +1,5 @@
+import { YES_NO } from "./src/utils";
+
 export interface SPLToken {
   chainId: number; // Should be 101 for Solana mainnet
   address: string; // Mint address (base58, case-sensitive)
@@ -60,4 +62,82 @@ export interface CoingeckoFullToken {
   max_supply_infinite: boolean;
   circulating_supply: number;
   market_cap_rank: number;
+}
+
+export interface CoingeckoTerminalTokenPool {
+  id: string;
+  type: string;
+}
+
+export interface CoingeckoTerminalToken {
+  id: string;
+  type: string;
+  attributes: {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    image_url: string;
+    coingecko_coin_id: string;
+    total_supply: string;
+    normalized_total_supply: string;
+    price_usd: string;
+    fdv_usd: string;
+    total_reserve_in_usd: string;
+    volume_usd: {
+      h24: string;
+    };
+    market_cap_usd: string;
+  };
+  relationships: {
+    top_pools: {
+      data: CoingeckoTerminalTokenPool[];
+    };
+  };
+}
+
+export interface CoingeckoTerminalTokenInfo {
+  id: string;
+  type: string;
+  attributes: {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    image_url: string;
+    image: {
+      thumb: string;
+      small: string;
+      large: string;
+    };
+    coingecko_coin_id: string;
+    websites: string[];
+    discord_url: string | null;
+    telegram_handle: string;
+    twitter_handle: string | null;
+    description: string;
+    gt_score: number;
+    gt_score_details: {
+      pool: number;
+      transaction: number;
+      creation: number;
+      info: number;
+      holders: number;
+    };
+    categories: string[];
+    gt_category_ids: string[];
+    holders: {
+      count: number;
+      distribution_percentage: {
+        top_10: string;
+        "11_20": string;
+        "21_40": string;
+        rest: string;
+      };
+      last_updated: string;
+    };
+    mint_authority: YES_NO;
+    freeze_authority: YES_NO;
+    is_honeypot: string | null;
+  };
 }

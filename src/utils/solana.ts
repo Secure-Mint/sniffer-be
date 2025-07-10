@@ -6,6 +6,6 @@ export class Solana {
 
   static init = () => {
     Solana.connection = new Connection(envs.QUICK_NODE_RPC_URL);
-    console.log("SOLANA INITIALIZED...");
+    console.log("SOLANA CONNECTION INITIALIZED...");
   };
 }

@@ -22,7 +22,7 @@ export class CoingeckoService {
 
   public async isStableCoin(address: string): Promise<boolean> {
     try {
-      const tokenDetail = await this.fetchTokenByAddress(address);
+      const tokenDetail = await this.fetchToken(address);
       return Boolean(tokenDetail?.categories.includes("Stablecoins") && tokenDetail?.platforms.solana === address);
     } catch (error) {
       const formattedError = error as unknown as HttpError;
@@ -32,9 +32,9 @@ export class CoingeckoService {
   }
 
   @UseCache()
-  public async fetchTokenByAddress(address: string): Promise<CoingeckoFullToken | null> {
+  public async fetchToken(address: string): Promise<CoingeckoFullToken | null> {
     try {
-      console.log(`[CACHE TEST] Executing fetchTokenByAddress for ${address}`);
+      console.log(`[CACHE TEST] Executing ${this.constructor.name} - fetchTokenInfo for ${address}`);
       const { data } = await makeRequest({
         url: `${this.baseURL}/coins/${SOLANA}/contract/${address}`,
         method: "GET",

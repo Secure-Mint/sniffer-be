@@ -5,6 +5,8 @@ import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils
 import { CoingeckoService } from "./CoingeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
+import { Description } from "@tsed/schema";
+import { CoingeckoTerminalService } from "./CoingeckoTerminalService";
 
 interface TokenRestrictionCheckResult {
   exampleFrozenAccount: string | null;
@@ -32,7 +34,10 @@ interface AccountInfo {
 export class SolanaService {
   public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
-  constructor(private coingeckoService: CoingeckoService) {}
+  constructor(
+    private coingeckoService: CoingeckoService,
+    private coingeckoTerminalService: CoingeckoTerminalService
+  ) {}
 
   public async fetchSPLStableCoins() {
     const { data } = await makeRequest({ url: this.SPLTokensURL, method: "GET" });
@@ -50,7 +55,7 @@ export class SolanaService {
 
   @UseCache()
   public async fetchAccountInfo(mintAddress: string): Promise<AccountInfo | null> {
-    console.log(`[CACHE CHECK] Executing fetchAccountInfo for ${mintAddress}`);
+    console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
     if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
 
     const publicKey = new PublicKey(mintAddress);
@@ -97,10 +102,33 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async getTokenHolders(mintAddress: string, decimals: number) {
-    console.log(`[CACHE CHECK] Executing getTopTokenHolders for ${mintAddress}`);
-    const connection = Solana.connection;
-    const allAccounts = await connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+  public async fetchTokenSupply(mintAddress: string, decimals: number) {
+    console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenSupply for ${mintAddress}`);
+
+    try {
+      const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
+      const geckoTerminalToken = await this.coingeckoTerminalService.fetchToken(mintAddress);
+      const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
+
+      console.log("geckoToken", geckoToken);
+      console.log("geckoTerminalToken", geckoTerminalToken);
+      console.log("geckoTerminalTokenInfo.attributes", geckoTerminalTokenInfo?.attributes);
+      return {
+        circulatingSupply: geckoToken?.circulating_supply,
+        totalSupply: geckoToken?.total_supply,
+        totalHoldersCount: geckoTerminalTokenInfo?.attributes.holders.count || 0,
+        top10HoldersPercentage: Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10)
+      };
+    } catch (error) {
+      console.log(error);
+      return await this.fetchOnchainSupply(mintAddress, decimals);
+    }
+  }
+
+  @UseCache()
+  public async fetchOnchainSupply(mintAddress: string, decimals: number) {
+    console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchOnchainSupply for ${mintAddress}`);
+    const allAccounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
       filters: [
         { dataSize: 165 },
         {
@@ -113,18 +141,23 @@ export class SolanaService {
     });
 
     const topHolders: { owner: string; amount: number }[] = [];
-    const MAX_TOP = 50;
-    let total = 0;
-    let totalHolders = 0;
+    const MAX_TOP = 10;
+    let circulatingSupply = 0;
+    let totalSupply = 0;
+    let totalHoldersCount = 0;
 
     for (const account of allAccounts) {
       const accountData = AccountLayout.decode(account.account.data);
       const owner = new PublicKey(accountData.owner).toBase58();
       const amount = Number(accountData.amount);
 
-      if (owner === "11111111111111111111111111111111") continue;
-      total += amount;
-      totalHolders += 1;
+      if (owner === "11111111111111111111111111111111") {
+        totalSupply += amount;
+        continue;
+      }
+      totalSupply += amount;
+      circulatingSupply += amount;
+      totalHoldersCount += 1;
 
       if (amount === 0) continue;
 
@@ -138,13 +171,15 @@ export class SolanaService {
     }
 
     topHolders.sort((a, b) => b.amount - a.amount);
+    circulatingSupply = circulatingSupply / Math.pow(10, decimals);
+    totalSupply = totalSupply / Math.pow(10, decimals);
 
     return {
-      circulatingSupply: total / Math.pow(10, decimals),
-      totalHolders,
-      top50Holders: topHolders,
-      top50HoldersAmount: topHolders.reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals),
-      top10HoldersAmount: topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals)
+      circulatingSupply,
+      totalSupply,
+      totalHoldersCount,
+      top10HoldersPercentage:
+        (topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100
     };
   }
 

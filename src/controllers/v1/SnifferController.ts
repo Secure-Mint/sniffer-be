@@ -23,9 +23,7 @@ export class SnifferController {
 
     const tokenMetadata = await this.solanaService.fetchAccountInfo(token.address);
 
-    console.log(tokenMetadata);
-
-    const { circulatingSupply, top50HoldersAmount, top10HoldersAmount, totalHolders } = await this.solanaService.getTokenHolders(
+    const { top10HoldersPercentage, totalHoldersCount, circulatingSupply, totalSupply } = await this.solanaService.fetchTokenSupply(
       token.address,
       tokenMetadata?.data.decimals || 0
     );
@@ -33,22 +31,18 @@ export class SnifferController {
     // const tokenRestrictions = await this.solanaService.checkTokenTransferRestrictions(token.address);
     // console.log(tokenRestrictions);
 
-    const top50HolderSupplyPercentage = fixDecimals((top50HoldersAmount / circulatingSupply) * 100, 2);
-    const top10HolderSupplyPercentage = fixDecimals((top10HoldersAmount / circulatingSupply) * 100, 2);
-
     return new SuccessResult(
       {
         symbol: token.symbol,
         name: token.name,
         address: token.address,
         dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
-        totalSupply: tokenMetadata?.totalSupply || 0,
-        circulatingSupply,
-        totalHolders: totalHolders || 0,
-        top10HolderSupplyPercentage,
-        top50HolderSupplyPercentage,
+        circulatingSupply: circulatingSupply || 0,
+        totalSupply: totalSupply || 0,
+        totalHolders: totalHoldersCount || 0,
+        top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
         tags: token.tags,
-        impersonator: sameSymbolTokens.length && !tokenInfo.coingecko_verified,
+        impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
         freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),
         mintAuthority: Boolean(tokenMetadata?.data.mintAuthority)
       },

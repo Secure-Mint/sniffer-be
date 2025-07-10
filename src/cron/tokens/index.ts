@@ -11,9 +11,10 @@ import { prisma } from "../../services/PrismaService";
 import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { CoingeckoService } from "../../services/CoingeckoService";
+import { CoingeckoTerminalService } from "../../services/CoingeckoTerminalService";
 import { JupiterService } from "../../services/JupiterService";
 import { TokenExtendedInfo } from "../../models";
-import { CoingeckoSimpleToken, JupiterToken } from "../../../types";
+import { CoingeckoSimpleToken } from "../../../types";
 import { createReadStream } from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -23,8 +24,9 @@ const __dirname = dirname(__filename);
 
 const tokenService = new TokenService();
 const coingeckoService = new CoingeckoService();
+const coingeckoTerminalService = new CoingeckoTerminalService();
 const jupiterService = new JupiterService();
-const solanaService = new SolanaService(coingeckoService);
+const solanaService = new SolanaService(coingeckoService, coingeckoTerminalService);
 
 const CHUNK_SIZE = 500;
 const FILE_PATH = `${__dirname}/jupiter_tokens.json`;
