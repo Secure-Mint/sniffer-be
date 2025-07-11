@@ -104,15 +104,10 @@ export class SolanaService {
   @UseCache()
   public async fetchTokenSupply(mintAddress: string, decimals: number) {
     console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenSupply for ${mintAddress}`);
-
     try {
       const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
-      const geckoTerminalToken = await this.coingeckoTerminalService.fetchToken(mintAddress);
       const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
 
-      console.log("geckoToken", geckoToken);
-      console.log("geckoTerminalToken", geckoTerminalToken);
-      console.log("geckoTerminalTokenInfo.attributes", geckoTerminalTokenInfo?.attributes);
       return {
         circulatingSupply: geckoToken?.circulating_supply,
         totalSupply: geckoToken?.total_supply,
