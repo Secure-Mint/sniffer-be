@@ -6,12 +6,14 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
-import { fixDecimals } from "../../utils";
+import { fixDecimals, RISK_STATUS } from "../../utils";
+import { JupiterService } from "../../services/JupiterService";
 
 @Controller("/sniffer")
 export class SnifferController {
   @Inject() private tokenService: TokenService;
   @Inject() private solanaService: SolanaService;
+  @Inject() private jupiterService: JupiterService;
 
   @Get("")
   @(Returns(200, SuccessResult).Of(SnifferModel))
@@ -28,6 +30,10 @@ export class SnifferController {
       tokenMetadata?.data.decimals || 0
     );
 
+    const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
+    console.log("tokenPrice", tokenPrice);
+    console.log("circulatingSupply", circulatingSupply);
+
     // const tokenRestrictions = await this.solanaService.checkTokenTransferRestrictions(token.address);
     // console.log(tokenRestrictions);
 
@@ -38,13 +44,15 @@ export class SnifferController {
         address: token.address,
         dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
         circulatingSupply: circulatingSupply || 0,
+        marketCap: fixDecimals((circulatingSupply || 1) * Number(tokenPrice), 2),
         totalSupply: totalSupply || 0,
         totalHolders: totalHoldersCount || 0,
         top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
         tags: token.tags,
         impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
         freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),
-        mintAuthority: Boolean(tokenMetadata?.data.mintAuthority)
+        mintAuthority: Boolean(tokenMetadata?.data.mintAuthority),
+        evalutation: RISK_STATUS.MEDIUM_RISK
       },
       SnifferModel
     );

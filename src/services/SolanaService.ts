@@ -106,17 +106,21 @@ export class SolanaService {
     console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenSupply for ${mintAddress}`);
     try {
       const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
-      const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
+      if (geckoToken) {
+        const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
 
-      return {
-        circulatingSupply: geckoToken?.circulating_supply,
-        totalSupply: geckoToken?.total_supply,
-        totalHoldersCount: geckoTerminalTokenInfo?.attributes.holders.count || 0,
-        top10HoldersPercentage: Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10)
-      };
+        return {
+          circulatingSupply: geckoToken?.circulating_supply,
+          totalSupply: geckoToken?.total_supply,
+          totalHoldersCount: geckoTerminalTokenInfo?.attributes.holders.count || 0,
+          top10HoldersPercentage: Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10)
+        };
+      } else {
+        return await this.fetchOnchainSupply(mintAddress, decimals);
+      }
     } catch (error) {
       console.log(error);
-      return await this.fetchOnchainSupply(mintAddress, decimals);
+      throw new Error(error.message);
     }
   }
 

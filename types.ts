@@ -54,14 +54,14 @@ export interface CoingeckoFullToken {
   symbol: string;
   name: string;
   platforms: Record<"solana" | "ethereum", string>;
-  market_cap: number;
+  // market_cap: number;
   fully_diluted_valuation: number;
   categories: string[];
   total_supply: number;
   max_supply: number;
   max_supply_infinite: boolean;
   circulating_supply: number;
-  market_cap_rank: number;
+  // market_cap_rank: number;
 }
 
 export interface CoingeckoTerminalTokenPool {
@@ -87,7 +87,7 @@ export interface CoingeckoTerminalToken {
     volume_usd: {
       h24: string;
     };
-    market_cap_usd: string;
+    // market_cap_usd: string;
   };
   relationships: {
     top_pools: {
