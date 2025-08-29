@@ -14,6 +14,7 @@ export class SnifferModel {
   @Required() public readonly impersonator: boolean;
   @Required() public readonly freezeAuthority: boolean;
   @Required() public readonly mintAuthority: boolean;
+  @Required() public readonly firstOnchainActivity: Date | null;
   @Required() @Enum(RISK_STATUS) public readonly evalutation: RISK_STATUS;
   @Required() @CollectionOf(String) public readonly tags: string[];
 }

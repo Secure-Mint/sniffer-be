@@ -1,11 +1,10 @@
 import { Injectable } from "@tsed/di";
-import { PublicKey, ConfirmedSignatureInfo } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { getMint, AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
 import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { CoingeckoService } from "./CoingeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
-import { Description } from "@tsed/schema";
 import { CoingeckoTerminalService } from "./CoingeckoTerminalService";
 
 interface TokenRestrictionCheckResult {
@@ -179,68 +178,6 @@ export class SolanaService {
       totalHoldersCount,
       top10HoldersPercentage:
         (topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100
-    };
-  }
-
-  @UseCache()
-  public async checkTokenTransferRestrictions(mintAddress: string): Promise<TokenRestrictionCheckResult> {
-    const warnings: string[] = [];
-
-    const mintPubkey = new PublicKey(mintAddress);
-
-    const signatures: ConfirmedSignatureInfo[] = await Solana.connection.getSignaturesForAddress(mintPubkey, { limit: 50 });
-    let recentFailedTransfers = 0;
-    let recentSuccessfulTransfers = 0;
-    const seenAccounts = new Set<string>();
-    let exampleFrozenAccount: string | null = null;
-
-    for (const sigInfo of signatures) {
-      const tx = await Solana.connection.getParsedTransaction(sigInfo.signature, {
-        maxSupportedTransactionVersion: 0
-      });
-      if (!tx) continue;
-
-      const { instructions } = tx.transaction.message;
-      const meta = tx.meta;
-
-      for (const ix of instructions) {
-        if ("parsed" in ix && ix.programId.equals(TOKEN_PROGRAM_ID)) {
-          const parsed = ix.parsed as any;
-          if (parsed?.type === "transfer") {
-            const dest = parsed.info.destination;
-            seenAccounts.add(dest);
-
-            if (meta?.err) recentFailedTransfers++;
-            else recentSuccessfulTransfers++;
-          }
-        }
-      }
-    }
-
-    if (recentSuccessfulTransfers === 0) {
-      warnings.push("No successful token transfers detected — may be transfer-locked");
-    }
-
-    if (recentFailedTransfers > 0) {
-      warnings.push(`${recentFailedTransfers} failed transfer(s) detected — possibly restricted`);
-    }
-
-    // Optional: Check if any of the seen destination accounts are frozen
-    for (const acc of seenAccounts) {
-      const info = await Solana.connection.getParsedAccountInfo(new PublicKey(acc));
-      const state = (info.value?.data as any)?.parsed?.info?.state;
-      if (state === "frozen") {
-        exampleFrozenAccount = acc;
-        warnings.push(`Account ${acc} is frozen — freeze restriction confirmed`);
-        break;
-      }
-    }
-
-    return {
-      exampleFrozenAccount,
-      recentFailedTransfers,
-      recentSuccessfulTransfers,
-      warnings
     };
   }
 }

@@ -31,11 +31,6 @@ export class SnifferController {
     );
 
     const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
-    console.log("tokenPrice", tokenPrice);
-    console.log("circulatingSupply", circulatingSupply);
-
-    // const tokenRestrictions = await this.solanaService.checkTokenTransferRestrictions(token.address);
-    // console.log(tokenRestrictions);
 
     return new SuccessResult(
       {
@@ -52,7 +47,8 @@ export class SnifferController {
         impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
         freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),
         mintAuthority: Boolean(tokenMetadata?.data.mintAuthority),
-        evalutation: RISK_STATUS.MEDIUM_RISK
+        evalutation: RISK_STATUS.MEDIUM_RISK,
+        firstOnchainActivity: token.created_at
       },
       SnifferModel
     );
