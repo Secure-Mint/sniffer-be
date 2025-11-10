@@ -33,7 +33,7 @@ export class JupiterService {
         url: `${this.baseURL}/price/v3?ids=${address}`,
         method: "GET"
       });
-      return fixDecimals(resp.data[address].usdPrice, 12);
+      return fixDecimals(resp.data[address]?.usdPrice || 0, 12);
     } catch (error) {
       const formattedError = error as unknown as HttpError;
       if (formattedError.status === 404) return "0";
