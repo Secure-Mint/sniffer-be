@@ -1,4 +1,4 @@
-import { CollectionOf, Enum, Required } from "@tsed/schema";
+import { CollectionOf, Enum, Nullable, Required } from "@tsed/schema";
 import { RISK_STATUS } from "../utils";
 
 export class SnifferModel {
@@ -14,8 +14,11 @@ export class SnifferModel {
   @Required() public readonly top20HolderSupplyPercentage: number;
   @Required() public readonly top40HolderSupplyPercentage: number;
   @Required() public readonly impersonator: boolean;
-  @Required() public readonly freezeAuthority: boolean;
-  @Required() public readonly mintAuthority: boolean;
+  @Nullable(String) public readonly freezeAuthority: string | null;
+  @Required() public readonly freezeAuthorityAvailable: boolean;
+  @Nullable(String) public readonly mintAuthority: string | null;
+  @Required() public readonly mintAuthorityAvailable: boolean;
+  @Required() public readonly immutableMetadata: boolean;
   @Required() public readonly firstOnchainActivity: Date | null;
   @Required() @Enum(RISK_STATUS) public readonly evalutation: RISK_STATUS;
   @Required() @CollectionOf(String) public readonly tags: string[];

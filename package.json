@@ -23,6 +23,7 @@
     "cron:tokens:run": "node --import @swc-node/register/esm-register src/cron/tokens/index.ts"
   },
   "dependencies": {
+    "@metaplex-foundation/js": "^0.20.1",
     "@prisma/client": "^6.7.0",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
@@ -45,6 +46,7 @@
     "@tsed/platform-http": "^8.8.4",
     "@tsed/platform-log-request": "^8.8.4",
     "@tsed/platform-middlewares": "^8.8.4",
+    "@tsed/platform-multer": "^8.18.2",
     "@tsed/platform-params": "^8.8.4",
     "@tsed/platform-response-filter": "^8.8.4",
     "@tsed/platform-views": "^8.8.4",
@@ -71,6 +73,9 @@
     "stream-json": "^1.9.1",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0"
+  },
+  "resolutions": {
+    "@solana/web3.js": "^1.98.2"
   },
   "devDependencies": {
     "@tsed/cli-plugin-eslint": "6.4.2",

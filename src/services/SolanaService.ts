@@ -1,11 +1,12 @@
 import { Injectable } from "@tsed/di";
-import { PublicKey } from "@solana/web3.js";
 import { getMint, AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
 import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { CoingeckoService } from "./CoingeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { CoingeckoTerminalService } from "./CoingeckoTerminalService";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { Metaplex, Nft, Sft } from "@metaplex-foundation/js";
 
 interface TokenRestrictionCheckResult {
   exampleFrozenAccount: string | null;
@@ -21,6 +22,7 @@ interface AccountInfo {
     decimals: number;
     isInitialized: boolean;
     freezeAuthority: string | null;
+    immutableMetadata: boolean;
   };
   executable: boolean;
   lamports: number;
@@ -52,6 +54,24 @@ export class SolanaService {
     return verified;
   }
 
+  public async isMetadataImmutable(mintAddress: string): Promise<boolean> {
+    const mintPublicKey = new PublicKey(mintAddress);
+    const metaplex = Metaplex.make(Solana.connection);
+
+    try {
+      const metadata = await metaplex.nfts().findByMint({ mintAddress: mintPublicKey });
+      if (metadata.isMutable === false) {
+        console.log(`Token ${mintAddress} metadata is immutable (isMutable is false).`);
+        return true;
+      } else {
+        console.log(`Token ${mintAddress} metadata is mutable. Authority may exist.`);
+        return false;
+      }
+    } catch (error) {
+      return true;
+    }
+  }
+
   @UseCache()
   public async fetchAccountInfo(mintAddress: string): Promise<AccountInfo | null> {
     console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
@@ -65,38 +85,22 @@ export class SolanaService {
     const mintAuthority = decoded.mintAuthorityOption === 0 ? null : new PublicKey(decoded.mintAuthority);
     const freezeAuthority = decoded.freezeAuthorityOption === 0 ? null : new PublicKey(decoded.freezeAuthority);
 
+    const immutableMetadata = await this.isMetadataImmutable(mintAddress);
+
     return {
       data: {
         mintAuthority: mintAuthority ? mintAuthority.toBase58() : null,
         supply: Number(decoded.supply.toString()),
         decimals: decoded.decimals,
         isInitialized: decoded.isInitialized,
-        freezeAuthority: freezeAuthority ? freezeAuthority.toBase58() : null
+        freezeAuthority: freezeAuthority ? freezeAuthority.toBase58() : null,
+        immutableMetadata
       },
       executable: accountInfo.executable,
       lamports: accountInfo.lamports,
       owner: accountInfo.owner.toBase58(),
       rentEpoch: accountInfo.rentEpoch || null,
       totalSupply: Number(decoded.supply.toString()) / Math.pow(10, decoded.decimals)
-    };
-  }
-
-  public async getMintAndFreezeAuthority(mintAddress: string) {
-    const publicKey = new PublicKey(mintAddress);
-
-    const accountInfo = await this.fetchAccountInfo(mintAddress);
-    if (!accountInfo) throw new HttpError("Mint address not found", 404);
-
-    if (!new PublicKey(accountInfo.owner).equals(TOKEN_PROGRAM_ID)) {
-      throw new HttpError("Address is not a valid SPL Token Mint", 400);
-    }
-
-    const mintInfo = await getMint(Solana.connection, publicKey);
-
-    return {
-      address: mintAddress,
-      mintAuthority: mintInfo.mintAuthority?.toBase58() ?? null,
-      freezeAuthority: mintInfo.freezeAuthority?.toBase58() ?? null
     };
   }
 
@@ -107,7 +111,6 @@ export class SolanaService {
       const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
       if (geckoToken) {
         const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
-        console.log(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage);
         const totalHoldersCount = geckoTerminalTokenInfo?.attributes.holders.count || 0;
         const top10HoldersPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
         const top20HoldersPercentage =

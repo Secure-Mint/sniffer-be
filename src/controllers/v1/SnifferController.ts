@@ -45,8 +45,11 @@ export class SnifferController {
         top40HolderSupplyPercentage: fixDecimals(top40HoldersPercentage, 2),
         tags: token.tags,
         impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
-        freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),
-        mintAuthority: Boolean(tokenMetadata?.data.mintAuthority),
+        freezeAuthority: tokenMetadata?.data?.freezeAuthority || null,
+        freezeAuthorityAvailable: Boolean(tokenMetadata?.data.freezeAuthority),
+        mintAuthority: tokenMetadata?.data?.mintAuthority || null,
+        mintAuthorityAvailable: Boolean(tokenMetadata?.data.mintAuthority),
+        immutableMetadata: Boolean(tokenMetadata?.data.immutableMetadata),
         evalutation: RISK_STATUS.MEDIUM_RISK,
         firstOnchainActivity: token.created_at
       },
