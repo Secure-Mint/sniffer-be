@@ -60,13 +60,7 @@ export class SolanaService {
 
     try {
       const metadata = await metaplex.nfts().findByMint({ mintAddress: mintPublicKey });
-      if (metadata.isMutable === false) {
-        console.log(`Token ${mintAddress} metadata is immutable (isMutable is false).`);
-        return true;
-      } else {
-        console.log(`Token ${mintAddress} metadata is mutable. Authority may exist.`);
-        return false;
-      }
+      return !metadata.isMutable;
     } catch (error) {
       return true;
     }
