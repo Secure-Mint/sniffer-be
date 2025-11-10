@@ -25,10 +25,8 @@ export class SnifferController {
 
     const tokenMetadata = await this.solanaService.fetchAccountInfo(token.address);
 
-    const { top10HoldersPercentage, totalHoldersCount, circulatingSupply, totalSupply } = await this.solanaService.fetchTokenSupply(
-      token.address,
-      tokenMetadata?.data.decimals || 0
-    );
+    const { top10HoldersPercentage, top20HoldersPercentage, top40HoldersPercentage, totalHoldersCount, circulatingSupply, totalSupply } =
+      await this.solanaService.fetchTokenSupply(token.address, tokenMetadata?.data.decimals || 0);
 
     const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
 
@@ -43,6 +41,8 @@ export class SnifferController {
         totalSupply: totalSupply || 0,
         totalHolders: totalHoldersCount || 0,
         top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
+        top20HolderSupplyPercentage: fixDecimals(top20HoldersPercentage, 2),
+        top40HolderSupplyPercentage: fixDecimals(top40HoldersPercentage, 2),
         tags: token.tags,
         impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
         freezeAuthority: Boolean(tokenMetadata?.data.freezeAuthority),

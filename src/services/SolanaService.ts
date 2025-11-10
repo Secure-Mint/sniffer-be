@@ -107,12 +107,21 @@ export class SolanaService {
       const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
       if (geckoToken) {
         const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
+        console.log(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage);
+        const totalHoldersCount = geckoTerminalTokenInfo?.attributes.holders.count || 0;
+        const top10HoldersPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
+        const top20HoldersPercentage =
+          top10HoldersPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["11_20"]);
+        const top40HoldersPercentage =
+          top20HoldersPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["21_40"]);
 
         return {
           circulatingSupply: geckoToken?.circulating_supply,
           totalSupply: geckoToken?.total_supply,
-          totalHoldersCount: geckoTerminalTokenInfo?.attributes.holders.count || 0,
-          top10HoldersPercentage: Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10)
+          totalHoldersCount,
+          top10HoldersPercentage,
+          top20HoldersPercentage,
+          top40HoldersPercentage
         };
       } else {
         return await this.fetchOnchainSupply(mintAddress, decimals);
@@ -139,7 +148,7 @@ export class SolanaService {
     });
 
     const topHolders: { owner: string; amount: number }[] = [];
-    const MAX_TOP = 10;
+    const MAX_TOP = 40;
     let circulatingSupply = 0;
     let totalSupply = 0;
     let totalHoldersCount = 0;
@@ -177,7 +186,10 @@ export class SolanaService {
       totalSupply,
       totalHoldersCount,
       top10HoldersPercentage:
-        (topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100
+        (topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100,
+      top20HoldersPercentage:
+        (topHolders.splice(0, 20).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100,
+      top40HoldersPercentage: (topHolders.reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100
     };
   }
 }

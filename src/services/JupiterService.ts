@@ -26,7 +26,7 @@ export class JupiterService {
   }
 
   @UseCache()
-  public async fetchTokenPrice(address: string): Promise<string> {
+  public async fetchTokenPrice(address: string): Promise<number> {
     try {
       console.log(`[CACHE TEST] Executing ${this.constructor.name} - fetchTokenPrice for ${address}`);
       const resp = await makeRequest({
@@ -36,7 +36,7 @@ export class JupiterService {
       return fixDecimals(resp.data[address]?.usdPrice || 0, 12);
     } catch (error) {
       const formattedError = error as unknown as HttpError;
-      if (formattedError.status === 404) return "0";
+      if (formattedError.status === 404) return 0;
       throw new HttpError(formattedError.message, formattedError.status);
     }
   }
