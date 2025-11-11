@@ -34,7 +34,7 @@ export class GeckoService {
   @UseCache()
   public async fetchToken(address: string): Promise<CoingeckoFullToken | null> {
     try {
-      console.log(`[CACHE TEST] Executing ${this.constructor.name} - fetchTokenInfo for ${address}`);
+      console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenInfo for ${address}`);
       const { data } = await makeRequest({
         url: `${this.baseURL}/coins/${SOLANA}/contract/${address}`,
         method: "GET",

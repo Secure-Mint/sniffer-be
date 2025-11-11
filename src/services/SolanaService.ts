@@ -99,42 +99,43 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async fetchTokenSupply(mintAddress: string, decimals: number) {
-    console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenSupply for ${mintAddress}`);
-    try {
-      const geckoToken = await this.geckoService.fetchToken(mintAddress);
-      if (geckoToken) {
-        const geckoTerminalTokenInfo = await this.geckoTerminalService.fetchTokenInfo(mintAddress);
-        const totalHoldersCount = geckoTerminalTokenInfo?.attributes.holders.count || 0;
-        const top10HoldersPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
-        const top20HoldersPercentage =
-          top10HoldersPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["11_20"]);
-        const top40HoldersPercentage =
-          top20HoldersPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["21_40"]);
+  public async fetchTokenSupply(mintAddress: string): Promise<{
+    top10HoldersPercentage: number;
+    top20HoldersPercentage: number;
+    top30HoldersPercentage: number;
+    top40HoldersPercentage: number;
+    top50HoldersPercentage: number;
+    totalHoldersCount: number;
+    circulatingSupply: number;
+    totalSupply: number;
+  }> {
+    console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
+    const mintPublicKey = new PublicKey(mintAddress);
 
-        return {
-          circulatingSupply: geckoToken?.circulating_supply,
-          totalSupply: geckoToken?.total_supply,
-          totalHoldersCount,
-          top10HoldersPercentage,
-          top20HoldersPercentage,
-          top40HoldersPercentage
-        };
-      } else {
-        return await this.fetchOnchainSupply(mintAddress, decimals);
-      }
-    } catch (error) {
-      console.log(error);
-      throw new Error(error.message);
+    const ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
+    const ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
+    const ACCOUNT_SIZE = 165; // Size of a standard Token Account
+
+    let totalSupplyInfo;
+    let totalRawSupply;
+    let accounts;
+    let decimals;
+    let divisor;
+
+    const supplyResponse = await Solana.connection.getTokenSupply(mintPublicKey);
+    totalSupplyInfo = supplyResponse.value;
+
+    if (!totalSupplyInfo) {
+      throw new Error("Could not retrieve token supply information.");
     }
-  }
 
-  @UseCache()
-  public async fetchOnchainSupply(mintAddress: string, decimals: number) {
-    console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchOnchainSupply for ${mintAddress}`);
-    const allAccounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+    decimals = totalSupplyInfo.decimals;
+    totalRawSupply = BigInt(totalSupplyInfo.amount);
+    divisor = BigInt(10) ** BigInt(decimals);
+
+    accounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
       filters: [
-        { dataSize: 165 },
+        { dataSize: ACCOUNT_SIZE },
         {
           memcmp: {
             offset: 0,
@@ -144,49 +145,81 @@ export class SolanaService {
       ]
     });
 
-    const topHolders: { owner: string; amount: number }[] = [];
-    const MAX_TOP = 40;
-    let circulatingSupply = 0;
-    let totalSupply = 0;
-    let totalHoldersCount = 0;
+    let frozenSupplyRaw = 0n;
+    let frozenCount = 0;
+    const allCirculatingAmountsRaw = []; // Stores BigInt amounts of circulating supply
 
-    for (const account of allAccounts) {
-      const accountData = AccountLayout.decode(account.account.data);
-      const owner = new PublicKey(accountData.owner).toBase58();
-      const amount = Number(accountData.amount);
+    for (const account of accounts) {
+      try {
+        const accountData = AccountLayout.decode(account.account.data);
+        const rawAmount = accountData.amount;
 
-      if (owner === "11111111111111111111111111111111") {
-        totalSupply += amount;
-        continue;
-      }
-      totalSupply += amount;
-      circulatingSupply += amount;
-      totalHoldersCount += 1;
+        const accountStateByte = account.account.data[ACCOUNT_STATE_OFFSET];
 
-      if (amount === 0) continue;
+        const isFrozen = accountStateByte === ACCOUNT_STATE_FROZEN || accountData.isNative;
 
-      if (topHolders.length < MAX_TOP) {
-        topHolders.push({ owner, amount });
-        topHolders.sort((a, b) => a.amount - b.amount);
-      } else if (amount > topHolders[0].amount) {
-        topHolders[0] = { owner, amount };
-        topHolders.sort((a, b) => a.amount - b.amount);
+        if (isFrozen) {
+          frozenSupplyRaw += rawAmount;
+          frozenCount++;
+        } else if (rawAmount > 0n) {
+          allCirculatingAmountsRaw.push(rawAmount);
+        }
+      } catch (error) {
+        console.warn(`Could not decode account data for: ${account.pubkey.toBase58()}. Skipping.`, error.message);
       }
     }
 
-    topHolders.sort((a, b) => b.amount - a.amount);
-    circulatingSupply = circulatingSupply / Math.pow(10, decimals);
-    totalSupply = totalSupply / Math.pow(10, decimals);
+    const frozenSupply = Number(frozenSupplyRaw) / Number(divisor);
+    const circulatingRawSupply = totalRawSupply - frozenSupplyRaw;
+    const circulatingSupply = Number(circulatingRawSupply) / Number(divisor);
+    const totalSupply = Number(totalRawSupply) / Number(divisor);
 
+    allCirculatingAmountsRaw.sort((a, b) => (b > a ? 1 : b < a ? -1 : 0));
+
+    const totalCirculatingHolders = allCirculatingAmountsRaw.length;
+    let cumulativeRawTotal = 0n;
+
+    // Initialize individual variables for percentages
+    let top10HoldersPercentage = 0;
+    let top20HoldersPercentage = 0;
+    let top30HoldersPercentage = 0;
+    let top40HoldersPercentage = 0;
+    let top50HoldersPercentage = 0;
+
+    for (let i = 0; i < totalCirculatingHolders; i++) {
+      cumulativeRawTotal += allCirculatingAmountsRaw[i];
+      const currentN = i + 1;
+
+      if (circulatingRawSupply > 0n) {
+        const percentage = (Number(cumulativeRawTotal) / Number(circulatingRawSupply)) * 100;
+
+        if (currentN === 10) {
+          top10HoldersPercentage = percentage;
+        } else if (currentN === 20) {
+          top20HoldersPercentage = percentage;
+        } else if (currentN === 30) {
+          top30HoldersPercentage = percentage;
+        } else if (currentN === 40) {
+          top40HoldersPercentage = percentage;
+        } else if (currentN === 50) {
+          top50HoldersPercentage = percentage;
+          break; // Optimization: stop processing after finding the top 50
+        }
+      }
+
+      if (currentN === 50) break; // Ensure loop breaks if 50 is reached
+    }
+
+    // 6. Return all results using the new, explicit variables
     return {
-      circulatingSupply,
       totalSupply,
-      totalHoldersCount,
-      top10HoldersPercentage:
-        (topHolders.splice(0, 10).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100,
-      top20HoldersPercentage:
-        (topHolders.splice(0, 20).reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100,
-      top40HoldersPercentage: (topHolders.reduce((sum, a) => sum + a.amount, 0) / Math.pow(10, decimals) / circulatingSupply) * 100
+      circulatingSupply,
+      totalHoldersCount: totalCirculatingHolders,
+      top10HoldersPercentage,
+      top20HoldersPercentage,
+      top30HoldersPercentage,
+      top40HoldersPercentage,
+      top50HoldersPercentage
     };
   }
 }

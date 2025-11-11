@@ -12,7 +12,9 @@ export class SnifferModel {
   @Required() public readonly totalHolders: number;
   @Required() public readonly top10HolderSupplyPercentage: number;
   @Required() public readonly top20HolderSupplyPercentage: number;
+  @Required() public readonly top30HolderSupplyPercentage: number;
   @Required() public readonly top40HolderSupplyPercentage: number;
+  @Required() public readonly top50HolderSupplyPercentage: number;
   @Required() public readonly impersonator: boolean;
   @Nullable(String) public readonly freezeAuthority: string | null;
   @Required() public readonly freezeAuthorityAvailable: boolean;
@@ -20,6 +22,8 @@ export class SnifferModel {
   @Required() public readonly mintAuthorityAvailable: boolean;
   @Required() public readonly immutableMetadata: boolean;
   @Required() public readonly firstOnchainActivity: Date | null;
+  @Required() public readonly score: number;
+  @Required() public readonly totalScore: number;
   @Required() @Enum(RISK_STATUS) public readonly risk: RISK_STATUS;
   @Required() @CollectionOf(String) public readonly tags: string[];
 }

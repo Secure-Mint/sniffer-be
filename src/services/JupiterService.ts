@@ -28,7 +28,7 @@ export class JupiterService {
   @UseCache()
   public async fetchTokenPrice(address: string): Promise<number> {
     try {
-      console.log(`[CACHE TEST] Executing ${this.constructor.name} - fetchTokenPrice for ${address}`);
+      console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenPrice for ${address}`);
       const resp = await makeRequest({
         url: `${this.baseURL}/price/v3?ids=${address}`,
         method: "GET"

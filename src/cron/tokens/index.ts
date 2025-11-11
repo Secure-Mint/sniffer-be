@@ -1,3 +1,9 @@
+/**
+ * This cronjob is outdated and needs refactor
+ * There is no way fetch all tokens at once from jupiter's free API
+ * We need to loop through new endpoints to fetch tokens
+ */
+
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -10,8 +16,8 @@ import { Solana, SOLANA, STABLE_COIN } from "../../utils";
 import { prisma } from "../../services/PrismaService";
 import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
-import { CoingeckoService } from "../../services/GeckoService";
-import { CoingeckoTerminalService } from "../../services/GeckoTerminalService";
+import { GeckoService } from "../../services/GeckoService";
+import { GeckoTerminalService } from "../../services/GeckoTerminalService";
 import { JupiterService } from "../../services/JupiterService";
 import { TokenExtendedInfo } from "../../models";
 import { CoingeckoSimpleToken } from "../../../types";
@@ -23,10 +29,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const tokenService = new TokenService();
-const coingeckoService = new CoingeckoService();
-const coingeckoTerminalService = new CoingeckoTerminalService();
+const geckoService = new GeckoService();
+const geckoTerminalService = new GeckoTerminalService();
 const jupiterService = new JupiterService();
-const solanaService = new SolanaService(coingeckoService, coingeckoTerminalService);
+const solanaService = new SolanaService(geckoService, geckoTerminalService);
 
 const CHUNK_SIZE = 500;
 const FILE_PATH = `${__dirname}/jupiter_tokens.json`;
@@ -35,7 +41,7 @@ const fetchAndSaveTokens = async () => {
   console.log("FETCHING TOKENS FROM JUPITER ...");
   await jupiterService.downloadJsonToFile(FILE_PATH);
   const stablecoins = await solanaService.fetchSPLStableCoins();
-  const coinGeckoTokens: CoingeckoSimpleToken[] = await coingeckoService.fetchTokens();
+  const coinGeckoTokens: CoingeckoSimpleToken[] = await geckoService.fetchTokens();
   console.log(`TOTAL SOLANA TOKENS ON COIN GECKO: ${coinGeckoTokens.length} \n`);
 
   await new Promise<void>((resolve, reject) => {

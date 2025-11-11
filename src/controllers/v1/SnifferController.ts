@@ -6,7 +6,7 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
-import { fixDecimals, RISK_STATUS } from "../../utils";
+import { calculateScore, fixDecimals, HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD, RISK_STATUS } from "../../utils";
 import { JupiterService } from "../../services/JupiterService";
 
 @Controller("/sniffer")
@@ -25,10 +25,25 @@ export class SnifferController {
 
     const tokenMetadata = await this.solanaService.fetchAccountInfo(token.address);
 
-    const { top10HoldersPercentage, top20HoldersPercentage, top40HoldersPercentage, totalHoldersCount, circulatingSupply, totalSupply } =
-      await this.solanaService.fetchTokenSupply(token.address, tokenMetadata?.data.decimals || 0);
+    const {
+      circulatingSupply,
+      totalSupply,
+      totalHoldersCount,
+      top10HoldersPercentage,
+      top20HoldersPercentage,
+      top30HoldersPercentage,
+      top40HoldersPercentage,
+      top50HoldersPercentage
+    } = await this.solanaService.fetchTokenSupply(token.address);
 
     const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
+    const { score, totalScore } = calculateScore();
+    const risk =
+      score < HIGH_RISK_THRESHOLD
+        ? RISK_STATUS.HIGH_RISK
+        : score < MEDIUM_RISK_THRESHOLD
+          ? RISK_STATUS.MODERATE_RISK
+          : RISK_STATUS.LOW_RISK;
 
     return new SuccessResult(
       {
@@ -42,7 +57,9 @@ export class SnifferController {
         totalHolders: totalHoldersCount || 0,
         top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
         top20HolderSupplyPercentage: fixDecimals(top20HoldersPercentage, 2),
+        top30HolderSupplyPercentage: fixDecimals(top30HoldersPercentage, 2),
         top40HolderSupplyPercentage: fixDecimals(top40HoldersPercentage, 2),
+        top50HolderSupplyPercentage: fixDecimals(top50HoldersPercentage, 2),
         tags: token.tags,
         impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
         freezeAuthority: tokenMetadata?.data?.freezeAuthority || null,
@@ -50,7 +67,9 @@ export class SnifferController {
         mintAuthority: tokenMetadata?.data?.mintAuthority || null,
         mintAuthorityAvailable: Boolean(tokenMetadata?.data.mintAuthority),
         immutableMetadata: Boolean(tokenMetadata?.data.immutableMetadata),
-        risk: RISK_STATUS.MEDIUM_RISK,
+        score,
+        totalScore,
+        risk,
         firstOnchainActivity: token.created_at
       },
       SnifferModel
