@@ -20,6 +20,6 @@ export class SnifferModel {
   @Required() public readonly mintAuthorityAvailable: boolean;
   @Required() public readonly immutableMetadata: boolean;
   @Required() public readonly firstOnchainActivity: Date | null;
-  @Required() @Enum(RISK_STATUS) public readonly evalutation: RISK_STATUS;
+  @Required() @Enum(RISK_STATUS) public readonly risk: RISK_STATUS;
   @Required() @CollectionOf(String) public readonly tags: string[];
 }

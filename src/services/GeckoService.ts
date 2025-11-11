@@ -5,7 +5,7 @@ import { envs } from "../config/envs";
 import { UseCache } from "@tsed/platform-cache";
 
 @Injectable()
-export class CoingeckoService {
+export class GeckoService {
   public baseURL = "https://api.coingecko.com/api/v3";
 
   public async fetchTokens() {

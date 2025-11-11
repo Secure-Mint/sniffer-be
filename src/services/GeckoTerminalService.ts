@@ -4,7 +4,7 @@ import { CoingeckoTerminalTokenInfo, CoingeckoTerminalToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
 
 @Injectable()
-export class CoingeckoTerminalService {
+export class GeckoTerminalService {
   public baseURL = "https://api.geckoterminal.com/api/v2";
 
   @UseCache()

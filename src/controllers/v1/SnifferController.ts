@@ -50,7 +50,7 @@ export class SnifferController {
         mintAuthority: tokenMetadata?.data?.mintAuthority || null,
         mintAuthorityAvailable: Boolean(tokenMetadata?.data.mintAuthority),
         immutableMetadata: Boolean(tokenMetadata?.data.immutableMetadata),
-        evalutation: RISK_STATUS.MEDIUM_RISK,
+        risk: RISK_STATUS.MEDIUM_RISK,
         firstOnchainActivity: token.created_at
       },
       SnifferModel

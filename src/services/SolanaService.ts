@@ -1,10 +1,10 @@
 import { Injectable } from "@tsed/di";
 import { getMint, AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
 import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
-import { CoingeckoService } from "./CoingeckoService";
+import { GeckoService } from "./GeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
-import { CoingeckoTerminalService } from "./CoingeckoTerminalService";
+import { GeckoTerminalService } from "./GeckoTerminalService";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Metaplex, Nft, Sft } from "@metaplex-foundation/js";
 
@@ -36,8 +36,8 @@ export class SolanaService {
   public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
   constructor(
-    private coingeckoService: CoingeckoService,
-    private coingeckoTerminalService: CoingeckoTerminalService
+    private geckoService: GeckoService,
+    private geckoTerminalService: GeckoTerminalService
   ) {}
 
   public async fetchSPLStableCoins() {
@@ -48,7 +48,7 @@ export class SolanaService {
     for (const token of stableTagged) {
       const id = token.extensions?.coingeckoId;
       if (!id) continue;
-      if (await this.coingeckoService.isStableCoin(token.address)) verified.push(token);
+      if (await this.geckoService.isStableCoin(token.address)) verified.push(token);
       await sleep(2500);
     }
     return verified;
@@ -102,9 +102,9 @@ export class SolanaService {
   public async fetchTokenSupply(mintAddress: string, decimals: number) {
     console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenSupply for ${mintAddress}`);
     try {
-      const geckoToken = await this.coingeckoService.fetchToken(mintAddress);
+      const geckoToken = await this.geckoService.fetchToken(mintAddress);
       if (geckoToken) {
-        const geckoTerminalTokenInfo = await this.coingeckoTerminalService.fetchTokenInfo(mintAddress);
+        const geckoTerminalTokenInfo = await this.geckoTerminalService.fetchTokenInfo(mintAddress);
         const totalHoldersCount = geckoTerminalTokenInfo?.attributes.holders.count || 0;
         const top10HoldersPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
         const top20HoldersPercentage =
