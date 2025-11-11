@@ -1,19 +1,12 @@
 import { Injectable } from "@tsed/di";
-import { getMint, AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
-import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
+import { AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
+import { isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { GeckoService } from "./GeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { GeckoTerminalService } from "./GeckoTerminalService";
-import { Connection, PublicKey } from "@solana/web3.js";
-import { Metaplex, Nft, Sft } from "@metaplex-foundation/js";
-
-interface TokenRestrictionCheckResult {
-  exampleFrozenAccount: string | null;
-  recentFailedTransfers: number;
-  recentSuccessfulTransfers: number;
-  warnings: string[];
-}
+import { PublicKey } from "@solana/web3.js";
+import { Metaplex } from "@metaplex-foundation/js";
 
 interface AccountInfo {
   data: {
@@ -34,6 +27,9 @@ interface AccountInfo {
 @Injectable()
 export class SolanaService {
   public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
+  private ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
+  private ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
+  private ACCOUNT_SIZE = 165; // Size of a standard Token Account
 
   constructor(
     private geckoService: GeckoService,
@@ -112,10 +108,6 @@ export class SolanaService {
     console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
     const mintPublicKey = new PublicKey(mintAddress);
 
-    const ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
-    const ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
-    const ACCOUNT_SIZE = 165; // Size of a standard Token Account
-
     let totalSupplyInfo;
     let totalRawSupply;
     let accounts;
@@ -135,7 +127,7 @@ export class SolanaService {
 
     accounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
       filters: [
-        { dataSize: ACCOUNT_SIZE },
+        { dataSize: this.ACCOUNT_SIZE },
         {
           memcmp: {
             offset: 0,
@@ -154,9 +146,9 @@ export class SolanaService {
         const accountData = AccountLayout.decode(account.account.data);
         const rawAmount = accountData.amount;
 
-        const accountStateByte = account.account.data[ACCOUNT_STATE_OFFSET];
+        const accountStateByte = account.account.data[this.ACCOUNT_STATE_OFFSET];
 
-        const isFrozen = accountStateByte === ACCOUNT_STATE_FROZEN || accountData.isNative;
+        const isFrozen = accountStateByte === this.ACCOUNT_STATE_FROZEN || accountData.isNative;
 
         if (isFrozen) {
           frozenSupplyRaw += rawAmount;
@@ -169,7 +161,7 @@ export class SolanaService {
       }
     }
 
-    const frozenSupply = Number(frozenSupplyRaw) / Number(divisor);
+    // const frozenSupply = Number(frozenSupplyRaw) / Number(divisor);
     const circulatingRawSupply = totalRawSupply - frozenSupplyRaw;
     const circulatingSupply = Number(circulatingRawSupply) / Number(divisor);
     const totalSupply = Number(totalRawSupply) / Number(divisor);
@@ -179,7 +171,6 @@ export class SolanaService {
     const totalCirculatingHolders = allCirculatingAmountsRaw.length;
     let cumulativeRawTotal = 0n;
 
-    // Initialize individual variables for percentages
     let top10HoldersPercentage = 0;
     let top20HoldersPercentage = 0;
     let top30HoldersPercentage = 0;
@@ -203,14 +194,13 @@ export class SolanaService {
           top40HoldersPercentage = percentage;
         } else if (currentN === 50) {
           top50HoldersPercentage = percentage;
-          break; // Optimization: stop processing after finding the top 50
+          break;
         }
       }
 
-      if (currentN === 50) break; // Ensure loop breaks if 50 is reached
+      if (currentN === 50) break;
     }
 
-    // 6. Return all results using the new, explicit variables
     return {
       totalSupply,
       circulatingSupply,
