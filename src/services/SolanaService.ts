@@ -5,7 +5,7 @@ import { GeckoService } from "./GeckoService";
 import { SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { GeckoTerminalService } from "./GeckoTerminalService";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, TransactionSignature, ParsedTransactionWithMeta } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
 
 interface AccountInfo {
@@ -211,5 +211,54 @@ export class SolanaService {
       top40HoldersPercentage,
       top50HoldersPercentage
     };
+  }
+
+  public async getFirstTokenActivity(mintAddress: string): Promise<ParsedTransactionWithMeta | null> {
+    const mintPublicKey = new PublicKey(mintAddress);
+
+    const LIMIT = 1000;
+    let options: { limit: number; before?: TransactionSignature } = { limit: LIMIT };
+
+    let firstTransactionSignature: TransactionSignature | null = null;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 50;
+
+    while (firstTransactionSignature === null && attempts < MAX_ATTEMPTS) {
+      attempts++;
+
+      const signatures = await Solana.connection.getSignaturesForAddress(mintPublicKey, options);
+
+      if (signatures.length === 0) {
+        break;
+      }
+
+      if (signatures.length < LIMIT) {
+        firstTransactionSignature = signatures[signatures.length - 1].signature;
+        console.log(`Search complete in ${attempts} attempt(s).`);
+        break;
+      }
+
+      options.before = signatures[signatures.length - 1].signature;
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    if (!firstTransactionSignature) {
+      return null;
+    }
+
+    const firstTransaction = await Solana.connection.getParsedTransaction(firstTransactionSignature, {
+      maxSupportedTransactionVersion: 0
+    });
+
+    if (firstTransaction && firstTransaction.blockTime) {
+      console.log("First transaction details:");
+      console.log(`Timestamp: ${new Date(firstTransaction.blockTime * 1000).toUTCString()}`);
+      console.log(`Slot: ${firstTransaction.slot}`);
+    } else {
+      console.log("Failed to retrieve details or timestamp for the first transaction.");
+    }
+
+    return firstTransaction;
   }
 }
