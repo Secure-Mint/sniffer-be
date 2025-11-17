@@ -6,7 +6,7 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
-import { calculateScore, fixDecimals, HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD, RISK_STATUS } from "../../utils";
+import { calculateTokenRiskScore, fixDecimals, HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD, RISK_STATUS } from "../../utils";
 import { JupiterService } from "../../services/JupiterService";
 
 @Controller("/sniffer")
@@ -37,40 +37,51 @@ export class SnifferController {
     } = await this.solanaService.fetchTokenSupply(token.address);
 
     const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
-    const { score, totalScore } = calculateScore();
-    const risk =
-      score < HIGH_RISK_THRESHOLD
-        ? RISK_STATUS.HIGH_RISK
-        : score < MEDIUM_RISK_THRESHOLD
-          ? RISK_STATUS.MODERATE_RISK
-          : RISK_STATUS.LOW_RISK;
+
+    const snifferData = {
+      symbol: token.symbol,
+      name: token.name,
+      address: token.address,
+      dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
+      circulatingSupply: circulatingSupply || 0,
+      marketCap: fixDecimals((circulatingSupply || 1) * Number(tokenPrice), 2),
+      totalSupply: totalSupply || 0,
+      totalHolders: totalHoldersCount || 0,
+      top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
+      top20HolderSupplyPercentage: fixDecimals(top20HoldersPercentage, 2),
+      top30HolderSupplyPercentage: fixDecimals(top30HoldersPercentage, 2),
+      top40HolderSupplyPercentage: fixDecimals(top40HoldersPercentage, 2),
+      top50HolderSupplyPercentage: fixDecimals(top50HoldersPercentage, 2),
+      tags: token.tags,
+      impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
+      freezeAuthority: tokenMetadata?.data?.freezeAuthority || null,
+      freezeAuthorityAvailable: Boolean(tokenMetadata?.data.freezeAuthority),
+      mintAuthority: tokenMetadata?.data?.mintAuthority || null,
+      mintAuthorityAvailable: Boolean(tokenMetadata?.data.mintAuthority),
+      immutableMetadata: Boolean(tokenMetadata?.data.immutableMetadata),
+      firstOnchainActivity: token.created_at
+    };
+
+    const { score, totalScore, risk } = calculateTokenRiskScore({
+      dailyVolume: snifferData.dailyVolume,
+      marketCap: snifferData.marketCap,
+      totalHolders: snifferData.totalHolders,
+      top50HolderSupplyPercentage: snifferData.top50HolderSupplyPercentage,
+      totalSupply,
+      frozenSupply: 0,
+      freezeAuthorityAvailable: snifferData.freezeAuthorityAvailable,
+      mintAuthorityAvailable: snifferData.mintAuthorityAvailable,
+      immutableMetadata: snifferData.immutableMetadata,
+      firstOnchainActivity: new Date(snifferData.firstOnchainActivity).getTime(),
+      impersonator: snifferData.impersonator
+    });
 
     return new SuccessResult(
       {
-        symbol: token.symbol,
-        name: token.name,
-        address: token.address,
-        dailyVolume: fixDecimals(tokenInfo.daily_volume || 0, 2),
-        circulatingSupply: circulatingSupply || 0,
-        marketCap: fixDecimals((circulatingSupply || 1) * Number(tokenPrice), 2),
-        totalSupply: totalSupply || 0,
-        totalHolders: totalHoldersCount || 0,
-        top10HolderSupplyPercentage: fixDecimals(top10HoldersPercentage, 2),
-        top20HolderSupplyPercentage: fixDecimals(top20HoldersPercentage, 2),
-        top30HolderSupplyPercentage: fixDecimals(top30HoldersPercentage, 2),
-        top40HolderSupplyPercentage: fixDecimals(top40HoldersPercentage, 2),
-        top50HolderSupplyPercentage: fixDecimals(top50HoldersPercentage, 2),
-        tags: token.tags,
-        impersonator: Boolean(sameSymbolTokens.length && !tokenInfo.coingecko_verified),
-        freezeAuthority: tokenMetadata?.data?.freezeAuthority || null,
-        freezeAuthorityAvailable: Boolean(tokenMetadata?.data.freezeAuthority),
-        mintAuthority: tokenMetadata?.data?.mintAuthority || null,
-        mintAuthorityAvailable: Boolean(tokenMetadata?.data.mintAuthority),
-        immutableMetadata: Boolean(tokenMetadata?.data.immutableMetadata),
+        ...snifferData,
         score,
         totalScore,
-        risk,
-        firstOnchainActivity: token.created_at
+        risk
       },
       SnifferModel
     );

@@ -141,3 +141,17 @@ export interface CoingeckoTerminalTokenInfo {
     is_honeypot: string | null;
   };
 }
+
+export interface TokenAnalysisData {
+  totalSupply: number;
+  frozenSupply: number;
+  top50HolderSupplyPercentage: number;
+  firstOnchainActivity: number;
+  totalHolders: number;
+  dailyVolume: number;
+  marketCap: number;
+  impersonator: boolean;
+  freezeAuthorityAvailable: boolean;
+  mintAuthorityAvailable: boolean;
+  immutableMetadata: boolean;
+}
