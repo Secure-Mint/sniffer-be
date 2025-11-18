@@ -6,7 +6,7 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { NotFound } from "@tsed/exceptions";
-import { calculateTokenRiskScore, fixDecimals, HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD, RISK_STATUS } from "../../utils";
+import { calculateRiskScore, fixDecimals, HIGH_RISK_THRESHOLD, MEDIUM_RISK_THRESHOLD, RISK_STATUS, STABLE_COIN } from "../../utils";
 import { JupiterService } from "../../services/JupiterService";
 
 @Controller("/sniffer")
@@ -62,18 +62,24 @@ export class SnifferController {
       firstOnchainActivity: token.created_at
     };
 
-    const { score, totalScore, risk } = calculateTokenRiskScore({
+    const { score, totalScore, risk } = calculateRiskScore({
       dailyVolume: snifferData.dailyVolume,
       marketCap: snifferData.marketCap,
       totalHolders: snifferData.totalHolders,
+      top10HolderSupplyPercentage: snifferData.top10HolderSupplyPercentage,
+      top20HolderSupplyPercentage: snifferData.top20HolderSupplyPercentage,
+      top30HolderSupplyPercentage: snifferData.top30HolderSupplyPercentage,
+      top40HolderSupplyPercentage: snifferData.top40HolderSupplyPercentage,
       top50HolderSupplyPercentage: snifferData.top50HolderSupplyPercentage,
       totalSupply,
       frozenSupply: 0,
+      circulatingSupply: snifferData.circulatingSupply,
       freezeAuthorityAvailable: snifferData.freezeAuthorityAvailable,
       mintAuthorityAvailable: snifferData.mintAuthorityAvailable,
       immutableMetadata: snifferData.immutableMetadata,
       firstOnchainActivity: new Date(snifferData.firstOnchainActivity).getTime(),
-      impersonator: snifferData.impersonator
+      impersonator: snifferData.impersonator,
+      isStableCoin: token.tags.includes(STABLE_COIN)
     });
 
     return new SuccessResult(

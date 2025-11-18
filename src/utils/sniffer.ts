@@ -1,128 +1,221 @@
 import { RISK_STATUS } from "../utils/constants";
-import { TokenAnalysisData } from "types";
+import { RiskAnalysisParams } from "types";
 
-export const calculateTokenRiskScore = (data: TokenAnalysisData): { score: number; totalScore: number; risk: RISK_STATUS } => {
-  // --- Risk Weighting (Total 100 Points) ---
-  const MAX_SUPPLY_CONTROL_SCORE = 40;
-  const MAX_CENTRALIZATION_SCORE = 30;
-  const MAX_TRUST_AND_AGE_SCORE = 30;
-  const DAYS_FOR_ZERO_AGE_RISK = 365;
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+const MAX_SCORE = 100;
+const MIN_SCORE = 35;
+const STABLE_COIN_SCORE = 90;
+const MAX_CONCENTRATION_PENALTY = 50;
+const IMPERSONATOR_PENALTY = 50;
 
-  // --- Helper to calculate age in days ---
-  const getAgeInDays = (creationTimestamp: number): number => {
-    const now = Date.now();
-    const ageInMilliseconds = now - creationTimestamp;
-    const ageInDays = ageInMilliseconds / (1000 * 60 * 60 * 24);
-    return Math.max(0, ageInDays);
-  };
+const getRiskStatus = (score: number): RISK_STATUS => {
+  if (score <= 35) return RISK_STATUS.EXTREME_RISK;
+  if (score <= 45) return RISK_STATUS.VERY_HIGH_RISK;
+  if (score <= 55) return RISK_STATUS.HIGH_RISK;
+  if (score <= 75) return RISK_STATUS.MODERATE_RISK;
+  if (score <= 85) return RISK_STATUS.LOW_RISK;
+  return RISK_STATUS.VERY_LOW_RISK;
+};
 
-  const totalScore = 100;
-  let rawRiskScore = 0;
-  let supplyControlScore = 0;
-  let centralizationScore = 0;
-  let trustAndAgeScore = 0;
-  let frozenPercent = 0;
-  const ageInDays = getAgeInDays(data.firstOnchainActivity);
+/**
+ * ==========================================
+ *        TOKEN RISK SCORE CALCULATION
+ * ==========================================
+ * Score Range: 0 (extreme risk) → 100 (low risk)
+ * Starting Score: 100 — points are deducted based on risk factors.
+ *
+ *
+ * ==========================================
+ * 1. SUPPLY CONCENTRATION RISK (Max –40)
+ * ==========================================
+ * High whale concentration dramatically increases rug-pull risk.
+ *
+ * Penalties (stricter multipliers):
+ *  - top10HolderSupplyPercentage > 40%:
+ *        (value - 40) * 0.6
+ *  - top20HolderSupplyPercentage > 50%:
+ *        (value - 50) * 0.35
+ *  - top30HolderSupplyPercentage > 60%:
+ *        (value - 60) * 0.25
+ *  - top50HolderSupplyPercentage > 75%:
+ *        (value - 75) * 0.15
+ *
+ * Total concentration penalty is capped at 40.
+ *
+ *
+ * ==========================================
+ * 2. AUTHORITY RISKS (Max –35)
+ * ==========================================
+ * Tokens with mutable or privileged authorities are riskier.
+ *
+ * Penalties:
+ *  - mintAuthorityAvailable === true        → –20
+ *  - freezeAuthorityAvailable === true      → –10
+ *  - immutableMetadata === false            → –5
+ *
+ *
+ * ==========================================
+ * 3. IMPERSONATION RISK (Max –50)
+ * ==========================================
+ * A token impersonating another project/name is one of the most
+ * severe scam indicators.
+ *
+ * Penalty:
+ *  - impersonator === true → –50
+ *
+ *
+ * ==========================================
+ * 4. LIQUIDITY / VOLUME RISK (Max –15)
+ * ==========================================
+ * Low daily trading volume indicates poor liquidity and higher risk.
+ *
+ * Penalties (stricter):
+ *  - dailyVolume < 1,000        → –15
+ *  - dailyVolume < 10,000       → –10
+ *  - dailyVolume < 50,000       → –6
+ *  - dailyVolume < 100,000      → –3
+ *
+ * Optional bonuses:
+ *  - marketCap > 10M            → +2
+ *  - marketCap > 100M           → +4
+ *
+ *
+ * ==========================================
+ * 5. HOLDER COUNT RISK (Max –15)
+ * ==========================================
+ * Fewer holders = higher rug/scam probability.
+ *
+ * IMPORTANT:
+ *  - If totalHolders <= 1, distribution is meaningless.
+ *    → No penalties or bonuses should be applied.
+ *
+ * Penalties:
+ *  - totalHolders < 500         → –15
+ *  - totalHolders < 1,000       → –12
+ *  - totalHolders < 3,000       → –7
+ *  - totalHolders < 10,000      → –3
+ *
+ *
+ * ==========================================
+ * 6. TOKEN AGE RISK (Max –15)
+ * ==========================================
+ * Very young tokens are significantly riskier.
+ *
+ * Penalties:
+ *  - ageDays < 3                → –15
+ *  - ageDays < 7                → –10
+ *  - ageDays < 30               → –6
+ *  - ageDays < 90               → –3
+ *
+ *
+ * ==========================================
+ * 7. SUPPLY INFLATION RISK (Max –10)
+ * ==========================================
+ * If total supply is much larger than circulating supply,
+ * project may inflate supply or dump unlocked tokens.
+ *
+ * Penalties:
+ *  - totalSupply > circulatingSupply * 1.5  → –10
+ *  - totalSupply > circulatingSupply * 1.2  → –5
+ *
+ *
+ * ==========================================
+ * FINAL SCORE
+ * ==========================================
+ * score = clamp(roundedScore, 0, 100)
+ *
+ *
+ * ==========================================
+ * RISK STATUS MAPPING
+ * ==========================================
+ * Based on final clamped score:
+ *
+ *   0–20    → EXTREME_RISK
+ *   21–40   → HIGH_RISK
+ *   41–70   → MODERATE_RISK
+ *   71–100  → LOW_RISK
+ *
+ */
+export const calculateRiskScore = (
+  token: RiskAnalysisParams
+): {
+  totalScore: number;
+  score: number;
+  risk: RISK_STATUS;
+} => {
+  let score = MAX_SCORE;
 
-  // ==========================================================
-  // 1. SUPPLY CONTROL & MUTABILITY SCORE (MAX 40 POINTS)
-  // ==========================================================
-
-  // 1a. Mint Authority (Max 15 points)
-  // If Mint Authority is available, a single entity can create infinite supply.
-  if (data.mintAuthorityAvailable) {
-    supplyControlScore += 15;
+  if (token.isStableCoin) {
+    score = STABLE_COIN_SCORE;
+    return {
+      totalScore: MAX_SCORE,
+      score,
+      risk: getRiskStatus(score)
+    };
   }
 
-  // 1b. Freeze Authority (Max 15 points)
-  // If Freeze Authority is available, a single entity can lock users' funds.
-  if (data.freezeAuthorityAvailable) {
-    supplyControlScore += 15;
+  // --- 1. Concentration ---
+  const t10 = token.top10HolderSupplyPercentage;
+  const t20 = token.top20HolderSupplyPercentage;
+  const t30 = token.top30HolderSupplyPercentage;
+  const t50 = token.top50HolderSupplyPercentage;
+
+  let concentrationPenalty = 0;
+  if (t10 > 40) concentrationPenalty += (t10 - 40) * 0.6;
+  if (t20 > 50) concentrationPenalty += (t20 - 50) * 0.35;
+  if (t30 > 60) concentrationPenalty += (t30 - 60) * 0.25;
+  if (t50 > 75) concentrationPenalty += (t50 - 75) * 0.15;
+
+  concentrationPenalty = Math.min(MAX_CONCENTRATION_PENALTY, concentrationPenalty);
+  score -= concentrationPenalty;
+
+  // --- 2. Authority Risks ---
+  if (token.mintAuthorityAvailable) score -= 20;
+  if (token.freezeAuthorityAvailable) score -= 10;
+  if (!token.immutableMetadata) score -= 5;
+
+  // --- 3. Impersonation ---
+  if (token.impersonator) score -= IMPERSONATOR_PENALTY;
+
+  // --- 4. Volume / Liquidity ---
+  const v = token.dailyVolume;
+  if (v < 1_000) score -= 15;
+  else if (v < 10_000) score -= 10;
+  else if (v < 50_000) score -= 6;
+  else if (v < 100_000) score -= 3;
+
+  // Market cap bonus
+  if (token.marketCap > 100_000_000) score += 4;
+  else if (token.marketCap > 10_000_000) score += 2;
+
+  // --- 5. Holder Count ---
+  const h = token.totalHolders;
+
+  if (h > 1) {
+    if (h < 500) score -= 15;
+    else if (h < 1_000) score -= 12;
+    else if (h < 3_000) score -= 7;
+    else if (h < 10_000) score -= 3;
   }
 
-  // 1c. Frozen Supply (Max 10 points)
-  if (data.totalSupply > 0) {
-    frozenPercent = (data.frozenSupply / data.totalSupply) * 100;
-    // Linear scaling: 100% frozen = 10 points
-    supplyControlScore += (frozenPercent / 100) * 10;
-  }
+  // --- 6. Age ---
+  const ageDays = (Date.now() - new Date(token.firstOnchainActivity).getTime()) / (1000 * 60 * 60 * 24);
 
-  // Cap the supply control score at its max weight
-  supplyControlScore = Math.min(supplyControlScore, MAX_SUPPLY_CONTROL_SCORE);
+  if (ageDays < 3) score -= 15;
+  else if (ageDays < 7) score -= 10;
+  else if (ageDays < 30) score -= 6;
+  else if (ageDays < 90) score -= 3;
 
-  // ==========================================================
-  // 2. HOLDER CENTRALIZATION SCORE (MAX 30 POINTS)
-  // ==========================================================
+  // --- 7. Supply inflation ---
+  if (token.totalSupply > token.circulatingSupply * 1.5) score -= 10;
+  else if (token.totalSupply > token.circulatingSupply * 1.2) score -= 5;
 
-  // 2a. Top 50 Concentration (Max 20 points)
-  // High concentration = high price manipulation risk.
-  // Linear scaling: 100% concentration = 20 points
-  centralizationScore += (data.top50HolderSupplyPercentage / 100) * 20;
-
-  // 2b. Total Holders Count (Max 10 points)
-  // Extremely low holder count (low adoption) is high risk.
-  const holderPenaltyThreshold = 1000;
-  if (data.totalHolders < holderPenaltyThreshold) {
-    // Penalty is 10 points for 0 holders, decreasing to 0 points at 1000 holders.
-    const penalty = ((holderPenaltyThreshold - data.totalHolders) / holderPenaltyThreshold) * 10;
-    centralizationScore += penalty;
-  }
-
-  // Cap the centralization score at its max weight
-  centralizationScore = Math.min(centralizationScore, MAX_CENTRALIZATION_SCORE);
-
-  // ==========================================================
-  // 3. TRUST AND AGE SCORE (MAX 30 POINTS)
-  // ==========================================================
-
-  // 3a. Impersonator Flag (Max 15 points)
-  // If flagged as an unverified copycat, this is a major trust failure.
-  if (data.impersonator) {
-    trustAndAgeScore += 15;
-  }
-
-  // 3b. Liquidity/Volume Risk (Max 5 points)
-  // Very low volume/market cap suggests low utility or high difficulty selling.
-  if (data.dailyVolume < 1000 && data.marketCap < 10000) {
-    trustAndAgeScore += 5;
-  }
-
-  // 3c. Age Score (Max 10 points)
-  if (ageInDays < DAYS_FOR_ZERO_AGE_RISK) {
-    // Linear decay: score drops to 0 after 365 days
-    const decayFactor = (DAYS_FOR_ZERO_AGE_RISK - ageInDays) / DAYS_FOR_ZERO_AGE_RISK;
-    trustAndAgeScore += decayFactor * 10;
-  }
-
-  // Cap the trust score at its max weight
-  trustAndAgeScore = Math.min(trustAndAgeScore, MAX_TRUST_AND_AGE_SCORE);
-
-  // ==========================================================
-  // 4. FINAL CALCULATION AND SCORE INVERSION
-  // ==========================================================
-
-  // Calculate raw risk score (0=safe, 100=risky)
-  rawRiskScore = Math.round(supplyControlScore + centralizationScore + trustAndAgeScore);
-  rawRiskScore = Math.min(100, Math.max(0, rawRiskScore));
-
-  // Invert the score as requested (0=risky, 100=safe)
-  const finalScore = totalScore - rawRiskScore;
-
-  // Map score to custom RISK_STATUS enum using the INVERTED score
-  const getRiskStatus = (score: number): RISK_STATUS => {
-    // 0-20 (Highest Risk, equivalent to 80-100 raw risk)
-    if (score <= 40) return RISK_STATUS.EXTREME_RISK;
-    // 21-49
-    if (score < 60) return RISK_STATUS.HIGH_RISK;
-    // 50-79
-    if (score < 80) return RISK_STATUS.MODERATE_RISK;
-    // 80-100 (Lowest Risk, equivalent to 0-20 raw risk)
-    return RISK_STATUS.LOW_RISK;
-  };
+  // -- Final Score
+  score = clamp(Math.round(score), MIN_SCORE, MAX_SCORE);
 
   return {
-    totalScore,
-    score: finalScore,
-    risk: getRiskStatus(finalScore)
+    totalScore: MAX_SCORE,
+    score,
+    risk: getRiskStatus(score)
   };
 };

@@ -142,9 +142,14 @@ export interface CoingeckoTerminalTokenInfo {
   };
 }
 
-export interface TokenAnalysisData {
+export interface RiskAnalysisParams {
   totalSupply: number;
   frozenSupply: number;
+  circulatingSupply: number;
+  top10HolderSupplyPercentage: number;
+  top20HolderSupplyPercentage: number;
+  top30HolderSupplyPercentage: number;
+  top40HolderSupplyPercentage: number;
   top50HolderSupplyPercentage: number;
   firstOnchainActivity: number;
   totalHolders: number;
@@ -154,4 +159,5 @@ export interface TokenAnalysisData {
   freezeAuthorityAvailable: boolean;
   mintAuthorityAvailable: boolean;
   immutableMetadata: boolean;
+  isStableCoin: boolean;
 }
