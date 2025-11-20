@@ -3,7 +3,9 @@ import { RISK_STATUS } from "../utils";
 
 export class SnifferModel {
   @Required() public readonly symbol: string;
+  @Required() public readonly imageUrl: string | null;
   @Required() public readonly name: string;
+  @Required() public readonly decimals: number;
   @Required() public readonly address: string;
   @Required() public readonly dailyVolume: number;
   @Required() public readonly totalSupply: number;

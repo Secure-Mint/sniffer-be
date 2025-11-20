@@ -25,6 +25,8 @@ export class GeckoService {
       const tokenDetail = await this.fetchToken(address);
       return Boolean(tokenDetail?.categories.includes("Stablecoins") && tokenDetail?.platforms.solana === address);
     } catch (error) {
+      console.log(`[ERROR] Executing - ${this.constructor.name} isStableCoin for ${address}`);
+      console.log(error);
       const formattedError = error as unknown as HttpError;
       if (formattedError.status === 404) return false;
       throw new HttpError(formattedError.message, formattedError.status);
@@ -57,6 +59,8 @@ export class GeckoService {
         circulating_supply: data.market_data.circulating_supply
       };
     } catch (error) {
+      console.log(`[ERROR] Executing - ${this.constructor.name} fetchToken for ${address}`);
+      console.log(error);
       const formattedError = error as unknown as HttpError;
       if (formattedError.status === 404) return null;
       throw new HttpError(formattedError.message, formattedError.status);

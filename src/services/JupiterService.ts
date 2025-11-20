@@ -35,6 +35,8 @@ export class JupiterService {
       });
       return fixDecimals(resp.data[address]?.usdPrice || 0, 12);
     } catch (error) {
+      console.log(`[ERROR] Executing - ${this.constructor.name} fetchTokenPrice for ${address}`);
+      console.log(error);
       const formattedError = error as unknown as HttpError;
       if (formattedError.status === 404) return 0;
       throw new HttpError(formattedError.message, formattedError.status);
