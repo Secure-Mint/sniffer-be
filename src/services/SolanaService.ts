@@ -2,27 +2,11 @@ import { Injectable } from "@tsed/di";
 import { AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
 import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { GeckoService } from "./GeckoService";
-import { SPLToken } from "types";
+import { TokenAccountInfo, SPLToken } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { GeckoTerminalService } from "./GeckoTerminalService";
 import { PublicKey, TransactionSignature, ParsedTransactionWithMeta } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
-
-interface AccountInfo {
-  data: {
-    mintAuthority: string | null;
-    supply: number;
-    decimals: number;
-    isInitialized: boolean;
-    freezeAuthority: string | null;
-    immutableMetadata: boolean;
-  };
-  executable: boolean;
-  lamports: number;
-  owner: string;
-  rentEpoch: number | null;
-  totalSupply: number;
-}
 
 @Injectable()
 export class SolanaService {
@@ -30,8 +14,9 @@ export class SolanaService {
   private ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
   private ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
   private ACCOUNT_SIZE = 165; // Size of a standard Token Account
-
   private BURN_ADDRESSES = ["11111111111111111111111111111111", "1nc1nerator11111111111111111111111111111111", "dead" + "0".repeat(40)];
+  private PUMP_FUN_PROGRAM_ID = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+  private BONDING_CURVE_SEED = "bonding-curve";
 
   constructor(
     private geckoService: GeckoService,
@@ -47,13 +32,21 @@ export class SolanaService {
     }
   }
 
-  public isPda(key: PublicKey): boolean {
+  public isPDA(key: PublicKey): boolean {
     try {
       PublicKey.isOnCurve(key.toBytes());
       return false;
     } catch (e) {
       return !PublicKey.isOnCurve(key.toBytes());
     }
+  }
+
+  public getPumpFunBondingCurvePDA(mintAddress: PublicKey): PublicKey {
+    const [bondingCurvePDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from(this.BONDING_CURVE_SEED), mintAddress.toBuffer()],
+      this.PUMP_FUN_PROGRAM_ID
+    );
+    return bondingCurvePDA;
   }
 
   public async fetchSPLStableCoins() {
@@ -83,20 +76,31 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async fetchAccountInfo(mintAddress: string): Promise<AccountInfo | null> {
+  public async fetchAccountInfo(mintAddress: string): Promise<TokenAccountInfo | null> {
     try {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
       if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
+      let isPumpFun = false;
 
-      const publicKey = new PublicKey(mintAddress);
-      const accountInfo = await Solana.connection.getAccountInfo(publicKey);
+      const mintPublicKey = new PublicKey(mintAddress);
+      const accountInfo = await Solana.connection.getAccountInfo(mintPublicKey);
       if (!accountInfo) return null;
 
       const decoded = MintLayout.decode(accountInfo.data);
       const mintAuthority = decoded.mintAuthorityOption === 0 ? null : new PublicKey(decoded.mintAuthority);
       const freezeAuthority = decoded.freezeAuthorityOption === 0 ? null : new PublicKey(decoded.freezeAuthority);
 
+      const mintAuthorityBuffer = decoded.mintAuthorityOption ? decoded.mintAuthority : null;
+
+      if (!mintAuthorityBuffer) isPumpFun = false;
+      else {
+        const actualMintAuthority = new PublicKey(mintAuthorityBuffer);
+        const expectedAuthorityPDA = this.getPumpFunBondingCurvePDA(mintPublicKey);
+        isPumpFun = actualMintAuthority.equals(expectedAuthorityPDA);
+      }
+
       const immutableMetadata = await this.isMetadataImmutable(mintAddress);
+      const divisor = BigInt(10) ** BigInt(decoded.decimals);
 
       return {
         data: {
@@ -107,11 +111,14 @@ export class SolanaService {
           freezeAuthority: freezeAuthority ? freezeAuthority.toBase58() : null,
           immutableMetadata
         },
+        isPumpFun,
         executable: accountInfo.executable,
         lamports: accountInfo.lamports,
         owner: accountInfo.owner.toBase58(),
         rentEpoch: accountInfo.rentEpoch || null,
-        totalSupply: Number(decoded.supply.toString()) / Math.pow(10, decoded.decimals)
+        totalSupplyRaw: Number(decoded.supply),
+        divisor: Number(divisor),
+        totalSupply: Number(decoded.supply) / Math.pow(10, decoded.decimals)
       };
     } catch (error) {
       console.log(`[ERROR] Executing - ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
@@ -144,17 +151,11 @@ export class SolanaService {
       let decimals;
       let divisor;
 
-      // --- 1. Fetch Supply Info ---
-      const supplyResponse = await Solana.connection.getTokenSupply(mintPublicKey);
-      totalSupplyInfo = supplyResponse.value;
+      const accountInfo = await this.fetchAccountInfo(mintAddress);
 
-      if (!totalSupplyInfo) {
-        throw new Error("Could not retrieve token supply information.");
-      }
-
-      decimals = totalSupplyInfo.decimals;
-      totalRawSupply = BigInt(totalSupplyInfo.amount);
-      divisor = BigInt(10) ** BigInt(decimals);
+      decimals = accountInfo?.data.decimals;
+      totalRawSupply = BigInt(accountInfo?.totalSupplyRaw!);
+      divisor = accountInfo?.divisor;
 
       // --- 2. Fetch All Token Accounts --- (Optimized version should be used here, but using provided code for context)
       accounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
@@ -190,7 +191,7 @@ export class SolanaService {
             continue; // Skip processing this as a circulating account
           }
 
-          if (this.isPda(ownerPublicKey)) {
+          if (this.isPDA(ownerPublicKey)) {
             console.log(`Skipping PDA owner: ${ownerAddressString}`);
             continue;
           }

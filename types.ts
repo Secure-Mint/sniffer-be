@@ -161,3 +161,22 @@ export interface RiskAnalysisParams {
   immutableMetadata: boolean;
   isStableCoin: boolean;
 }
+
+export interface TokenAccountInfo {
+  data: {
+    mintAuthority: string | null;
+    supply: number;
+    decimals: number;
+    isInitialized: boolean;
+    freezeAuthority: string | null;
+    immutableMetadata: boolean;
+  };
+  executable: boolean;
+  lamports: number;
+  owner: string;
+  rentEpoch: number | null;
+  totalSupplyRaw: number;
+  divisor: number;
+  totalSupply: number;
+  isPumpFun: boolean;
+}

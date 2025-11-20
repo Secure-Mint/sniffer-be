@@ -54,7 +54,7 @@ const enum AGE_PENALTY {
   AGE_90 = 3
 }
 
-const getRiskStatus = (score: number): RISK_STATUS => {
+export const getRiskStatus = (score: number): RISK_STATUS => {
   if (score <= 35) return RISK_STATUS.EXTREME_RISK;
   if (score <= 45) return RISK_STATUS.VERY_HIGH_RISK;
   if (score <= 55) return RISK_STATUS.HIGH_RISK;
@@ -63,109 +63,6 @@ const getRiskStatus = (score: number): RISK_STATUS => {
   return RISK_STATUS.VERY_LOW_RISK;
 };
 
-/**
- * ==========================================
- *        TOKEN RISK SCORE CALCULATION
- * ==========================================
- * Score Range: 0 (extreme risk) → 100 (low risk)
- * Starting Score: 100 — points are deducted based on risk factors.
- *
- *
- * ==========================================
- * 1. SUPPLY CONCENTRATION RISK (Max –40)
- * ==========================================
- * High whale concentration dramatically increases rug-pull risk.
- *
- * Penalties (stricter multipliers):
- *  - top10HolderSupplyPercentage > 40%:
- *        (value - 40) * 0.6
- *  - top20HolderSupplyPercentage > 50%:
- *        (value - 50) * 0.35
- *  - top30HolderSupplyPercentage > 60%:
- *        (value - 60) * 0.25
- *  - top50HolderSupplyPercentage > 75%:
- *        (value - 75) * 0.15
- *
- * Total concentration penalty is capped at 40.
- *
- *
- * ==========================================
- * 2. AUTHORITY RISKS (Max –35)
- * ==========================================
- * Tokens with mutable or privileged authorities are riskier.
- *
- * Penalties:
- *  - mintAuthorityAvailable === true        → –20
- *  - freezeAuthorityAvailable === true      → –10
- *  - immutableMetadata === false            → –5
- *
- *
- * ==========================================
- * 3. IMPERSONATION RISK (Max –50)
- * ==========================================
- * A token impersonating another project/name is one of the most
- * severe scam indicators.
- *
- * Penalty:
- *  - impersonator === true → –50
- *
- *
- * ==========================================
- * 4. LIQUIDITY / VOLUME RISK (Max –15)
- * ==========================================
- * Low daily trading volume indicates poor liquidity and higher risk.
- *
- * Penalties (stricter):
- *  - dailyVolume < 1,000        → –15
- *  - dailyVolume < 10,000       → –10
- *  - dailyVolume < 50,000       → –6
- *  - dailyVolume < 100,000      → –3
- *
- * Optional bonuses:
- *  - marketCap > 10M            → +2
- *  - marketCap > 100M           → +4
- *
- *
- * ==========================================
- * 5. HOLDER COUNT RISK (Max –15)
- * ==========================================
- * Fewer holders = higher rug/scam probability.
- *
- * IMPORTANT:
- *  - If totalHolders <= 1, distribution is meaningless.
- *    → No penalties or bonuses should be applied.
- *
- * Penalties:
- *  - totalHolders < 500         → –15
- *  - totalHolders < 1,000       → –12
- *  - totalHolders < 3,000       → –7
- *  - totalHolders < 10,000      → –3
- *
- *
- * ==========================================
- * 6. TOKEN AGE RISK (Max –15)
- * ==========================================
- * Very young tokens are significantly riskier.
- *
- * Penalties:
- *  - ageDays < 3                → –15
- *  - ageDays < 7                → –10
- *  - ageDays < 30               → –6
- *  - ageDays < 90               → –3
- *
- *
- * ==========================================
- * 7. SUPPLY INFLATION RISK (Max –10)
- * ==========================================
- * If total supply is much larger than circulating supply,
- * project may inflate supply or dump unlocked tokens.
- *
- * Penalties:
- *  - totalSupply > circulatingSupply * 1.5  → –10
- *  - totalSupply > circulatingSupply * 1.2  → –5
- *
- *
- */
 export const calculateRiskScore = (
   token: RiskAnalysisParams
 ): {
@@ -204,8 +101,6 @@ export const calculateRiskScore = (
     };
   }
 
-  console.log("init score", score);
-
   const equalPercentagePerHolder = 100 / totalHolders;
   let concentrationPenalty = 0;
   if (t10 > equalPercentagePerHolder * 10) concentrationPenalty += (t10 - equalPercentagePerHolder * 10) * 0.6;
@@ -217,27 +112,19 @@ export const calculateRiskScore = (
   concentrationPenalty = Math.min(MAX_CONCENTRATION_PENALTY, concentrationPenalty);
   score -= concentrationPenalty;
 
-  console.log("holders score", score);
-
   // --- 2. Authority Risks ---
   if (mintAuthorityAvailable) score -= MINT_AUTHORITY_PENALTY;
   if (freezeAuthorityAvailable) score -= FREEZE_AUTHORITY_PENALTY;
   if (!immutableMetadata) score -= NON_IMMUTABLE_METADATA_PENALTY;
 
-  console.log("authority score", score);
-
   // --- 3. Impersonation ---
   if (impersonator) score -= IMPERSONATOR_PENALTY;
-
-  console.log("impoersonator score", score);
 
   // --- 4. Volume / Liquidity ---
   if (dailyVolume < THOUSAND) score -= DAILY_VOLUME_PENALTY.VOLUME_1000;
   else if (dailyVolume < TEN_THOUSAND) score -= DAILY_VOLUME_PENALTY.VOLUME_10_000;
   else if (dailyVolume < FIFTY_THOUSAND) score -= DAILY_VOLUME_PENALTY.VOLUME_50_000;
   else if (dailyVolume < HUNDRED_THOUSAND) score -= DAILY_VOLUME_PENALTY.VOLUME_100_000;
-
-  console.log("volume score", score);
 
   // Market cap
   if (marketCap < FIFTY_THOUSAND) score -= MARKETCAP_PENALTY.FIFTY_THOUSAND;
@@ -249,8 +136,6 @@ export const calculateRiskScore = (
   else if (marketCap < MILLION_50) score -= MARKETCAP_PENALTY.MILLION_50;
   else if (marketCap < MILLION_100) score -= MARKETCAP_PENALTY.MILLION_100;
 
-  console.log("marketcap score", score);
-
   // --- 5. Holder Count ---
   if (totalHolders > 1) {
     if (totalHolders < 500) score -= HOLDERS_PENALTY.HOLDERS_500;
@@ -259,16 +144,12 @@ export const calculateRiskScore = (
     else if (totalHolders < 10_000) score -= HOLDERS_PENALTY.HOLDERS_10_000;
   }
 
-  console.log("holders score", score);
-
   // --- 6. Age ---
   const ageDays = (Date.now() - new Date(firstOnchainActivity).getTime()) / (1000 * 60 * 60 * 24);
   if (ageDays < 3) score -= AGE_PENALTY.AGE_3;
   else if (ageDays < 7) score -= AGE_PENALTY.AGE_7;
   else if (ageDays < 30) score -= AGE_PENALTY.AGE_30;
   else if (ageDays < 90) score -= AGE_PENALTY.AGE_90;
-
-  console.log("age score", score);
 
   // --- 7. Supply inflation ---
   const circulating = Number(circulatingSupply ?? 0);
@@ -283,8 +164,6 @@ export const calculateRiskScore = (
       score -= 5;
     }
   }
-
-  console.log("circulation score", score);
 
   // -- Final Score
   score = clamp(Math.round(score), MIN_SCORE, MAX_SCORE);
