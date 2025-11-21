@@ -215,6 +215,8 @@ export interface TokenSnifferData {
   top50HolderSupplyPercentage: number; // done
 
   totalHolders: number; // done
+  whaleAccountsCount: number;
+  whaleAccountsSupplyPercentage: number;
   holderDistributionScore?: number;
 
   /* ========== MARKET DATA ========== */
@@ -262,6 +264,10 @@ export interface TokenSnifferData {
   uniqueSellers24h?: number;
   whaleCount?: number; // # of wallets with >1% supply
   suspiciousWallets?: string[];
+
+  /* ========== TRANSACTIONS ========== */
+  totalTransactions?: string | null;
+  totalTransfers?: string | null;
 
   /* ========== SOCIAL / EXTERNAL SIGNALS ========== */
   twitter?: string | null;
