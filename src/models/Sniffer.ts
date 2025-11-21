@@ -23,6 +23,7 @@ export class SnifferModel {
   @Nullable(String) public readonly mintAuthority: string | null;
   @Required() public readonly mintAuthorityAvailable: boolean;
   @Required() public readonly immutableMetadata: boolean;
+  @Required() public readonly totalSupplyUnlocked: boolean;
   @Required() public readonly firstOnchainActivity: Date | null;
   @Required() public readonly score: number;
   @Required() public readonly totalScore: number;

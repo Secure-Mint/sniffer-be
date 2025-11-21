@@ -2,7 +2,7 @@ import { Injectable } from "@tsed/di";
 import { AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
 import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
 import { GeckoService } from "./GeckoService";
-import { TokenAccountInfo, SPLToken } from "types";
+import { TokenAccountInfo, SPLToken, TokenSupplyInfo } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { GeckoTerminalService } from "./GeckoTerminalService";
 import { PublicKey, TransactionSignature, ParsedTransactionWithMeta } from "@solana/web3.js";
@@ -130,35 +130,17 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async fetchTokenSupply(mintAddress: string): Promise<{
-    top10HoldersPercentage: number;
-    top20HoldersPercentage: number;
-    top30HoldersPercentage: number;
-    top40HoldersPercentage: number;
-    top50HoldersPercentage: number;
-    totalHoldersCount: number;
-    circulatingSupply: number;
-    totalSupply: number;
-    burnedTokens: number;
-  } | null> {
+  public async fetchTokenSupply(mintAddress: string): Promise<TokenSupplyInfo | null> {
     try {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
-      const mintPublicKey = new PublicKey(mintAddress);
-
-      let totalSupplyInfo;
-      let totalRawSupply;
-      let accounts;
-      let decimals;
-      let divisor;
 
       const accountInfo = await this.fetchAccountInfo(mintAddress);
 
-      decimals = accountInfo?.data.decimals;
-      totalRawSupply = BigInt(accountInfo?.totalSupplyRaw!);
-      divisor = accountInfo?.divisor;
+      const totalRawSupply = BigInt(accountInfo?.totalSupplyRaw!);
+      const divisor = accountInfo?.divisor;
 
       // --- 2. Fetch All Token Accounts --- (Optimized version should be used here, but using provided code for context)
-      accounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
+      const accounts = await Solana.connection.getProgramAccounts(TOKEN_PROGRAM_ID, {
         filters: [
           { dataSize: this.ACCOUNT_SIZE },
           {

@@ -1,4 +1,4 @@
-import { YES_NO } from "./src/utils";
+import { RISK_STATUS, YES_NO } from "./src/utils";
 
 export interface SPLToken {
   chainId: number; // Should be 101 for Solana mainnet
@@ -179,4 +179,100 @@ export interface TokenAccountInfo {
   divisor: number;
   totalSupply: number;
   isPumpFun: boolean;
+}
+
+export interface TokenSupplyInfo {
+  top10HoldersPercentage: number;
+  top20HoldersPercentage: number;
+  top30HoldersPercentage: number;
+  top40HoldersPercentage: number;
+  top50HoldersPercentage: number;
+  totalHoldersCount: number;
+  circulatingSupply: number;
+  totalSupply: number;
+  burnedTokens: number;
+}
+
+export interface TokenSnifferData {
+  /* ========== BASIC TOKEN INFO ========== */
+  symbol: string; // done
+  name: string; // done
+  address: string; // done
+  decimals: number; // done
+  imageUrl?: string | null; // done but needs to update from gecko terminal
+  tags?: string[]; // done
+
+  /* ========== SUPPLY & DISTRIBUTION ========== */
+  totalSupply: number; // done
+  circulatingSupply: number; // done
+  burnedSupply: number;
+  burnedPercentage: number;
+
+  top10HolderSupplyPercentage: number; // done
+  top20HolderSupplyPercentage: number; // done
+  top30HolderSupplyPercentage: number; // done
+  top40HolderSupplyPercentage: number; // done
+  top50HolderSupplyPercentage: number; // done
+
+  totalHolders: number; // done
+  holderDistributionScore?: number;
+
+  /* ========== MARKET DATA ========== */
+  dailyVolume: number;
+  marketCap: number; // done
+  liquidityUSD?: number;
+  liquidityTokenAmount?: number;
+  priceUSD?: number;
+
+  /* ========== AUTHORITY & TOKEN SECURITY ========== */
+  freezeAuthority: string | null; // done
+  freezeAuthorityAvailable: boolean; // done
+
+  mintAuthority: string | null; // done
+  mintAuthorityAvailable: boolean; // done
+
+  immutableMetadata: boolean; // done
+
+  /* ========== IMPERSONATION & NAME RISK ========== */
+  impersonator: boolean; // done
+  symbolCollisionCount?: number;
+  similarTokenNames?: string[];
+
+  /* ========== RUG-PULL / BEHAVIORAL FLAGS ========== */
+  hasRenouncedMint: boolean; // done
+  hasRenouncedFreeze: boolean; // done
+
+  programId: string; // SPL Program ID
+  ownerProgram: string; // program of mint account
+  verifiedOnRaydium?: boolean;
+  verifiedOnCoingecko?: boolean;
+  verifiedOnJupiter?: boolean;
+
+  /* ========== LIQUIDITY POOL ANALYSIS ========== */
+  lpLockedPercentage?: number; // how much LP is locked
+  lpUnlockDate?: string | null; // when liquidity unlocks
+  lpCreatorShare?: number; // % LP owned by deployer
+  lpTokenAddress?: string;
+
+  /* ========== TRANSACTION & HOLDER BEHAVIOR ========== */
+  firstOnchainActivity: string; // done
+  createdAtBlock?: number;
+  txCount24h?: number;
+  uniqueBuyers24h?: number;
+  uniqueSellers24h?: number;
+  whaleCount?: number; // # of wallets with >1% supply
+  suspiciousWallets?: string[];
+
+  /* ========== SOCIAL / EXTERNAL SIGNALS ========== */
+  twitter?: string | null;
+  website?: string | null;
+  telegram?: string | null;
+  discord?: string | null;
+  github?: string | null;
+  socialsVerified?: boolean;
+
+  /* ========== RISK ENGINE OUTPUTS ========== */
+  score: number; // final risk score (0–100)
+  totalScore: number;
+  risk: RISK_STATUS;
 }

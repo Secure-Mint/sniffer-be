@@ -6,7 +6,7 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { BadRequest, NotFound } from "@tsed/exceptions";
-import { calculateRiskScore, fixDecimals, STABLE_COIN } from "../../utils";
+import { calculateRiskScore, fixDecimals, RISK_STATUS, STABLE_COIN } from "../../utils";
 import { JupiterService } from "../../services/JupiterService";
 
 @Controller("/sniffer")
@@ -30,7 +30,7 @@ export class SnifferController {
 
     const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
 
-    const snifferData = {
+    const snifferData: SnifferModel = {
       symbol: token.symbol,
       imageUrl: token.logo_uri,
       name: token.name,
@@ -53,7 +53,11 @@ export class SnifferController {
       mintAuthority: tokenAccount?.data?.mintAuthority || null,
       mintAuthorityAvailable: Boolean(tokenAccount?.data.mintAuthority),
       immutableMetadata: Boolean(tokenAccount?.data.immutableMetadata),
-      firstOnchainActivity: tokenInfo.minted_at || token.created_at
+      firstOnchainActivity: tokenInfo.minted_at || token.created_at,
+      totalSupplyUnlocked: tokenSupply?.totalSupply === tokenSupply?.circulatingSupply,
+      totalScore: 0,
+      score: 0,
+      risk: RISK_STATUS.EXTREME_RISK
     };
 
     const { score, totalScore, risk } = calculateRiskScore({
@@ -71,7 +75,7 @@ export class SnifferController {
       freezeAuthorityAvailable: snifferData.freezeAuthorityAvailable,
       mintAuthorityAvailable: snifferData.mintAuthorityAvailable,
       immutableMetadata: snifferData.immutableMetadata,
-      firstOnchainActivity: new Date(snifferData.firstOnchainActivity).getTime(),
+      firstOnchainActivity: new Date(snifferData.firstOnchainActivity!).getTime(),
       impersonator: snifferData.impersonator,
       isStableCoin: token.tags.includes(STABLE_COIN)
     });
