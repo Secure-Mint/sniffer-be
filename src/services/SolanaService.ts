@@ -135,7 +135,6 @@ export class SolanaService {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
 
       const accountInfo = await this.fetchAccountInfo(mintAddress);
-
       const totalRawSupply = BigInt(accountInfo?.totalSupplyRaw!);
       const divisor = accountInfo?.divisor;
 
@@ -153,7 +152,7 @@ export class SolanaService {
       });
 
       let frozenSupplyRaw = 0n;
-      let burnedSupplyRaw = 0n; // NEW: Raw supply held in burn addresses
+      let burnedSupplyRaw = 0n;
       let frozenCount = 0;
       const allCirculatingAmountsRaw = [];
 
@@ -165,12 +164,9 @@ export class SolanaService {
           const ownerPublicKey = accountData.owner;
           const ownerAddressString = ownerPublicKey.toBase58();
 
-          // NEW: Check for burn addresses FIRST
           if (this.BURN_ADDRESSES.includes(ownerAddressString)) {
-            // Tokens in a burn address are considered burned/out of circulation.
             burnedSupplyRaw += rawAmount;
-            console.log(`Tracking burn address owner: ${ownerAddressString}`);
-            continue; // Skip processing this as a circulating account
+            continue;
           }
 
           if (this.isPDA(ownerPublicKey)) {
@@ -193,14 +189,13 @@ export class SolanaService {
       }
 
       // --- 4. Calculate Supply and Holder Percentages ---
-
       // Circulating supply excludes frozen AND effectively burned tokens
       const nonCirculatingRawSupply = frozenSupplyRaw + burnedSupplyRaw;
       const circulatingRawSupply = totalRawSupply - nonCirculatingRawSupply;
 
       const circulatingSupply = Number(circulatingRawSupply) / Number(divisor);
       const totalSupply = Number(totalRawSupply) / Number(divisor);
-      const burnedTokens = Number(burnedSupplyRaw) / Number(divisor); // NEW: Final calculation for burned tokens
+      const burnedTokens = Number(burnedSupplyRaw) / Number(divisor);
 
       allCirculatingAmountsRaw.sort((a, b) => (b > a ? 1 : b < a ? -1 : 0));
 
@@ -245,7 +240,7 @@ export class SolanaService {
         top30HoldersPercentage,
         top40HoldersPercentage,
         top50HoldersPercentage,
-        burnedTokens // NEW: Return the calculated burned tokens
+        burnedTokens
       };
     } catch (error) {
       console.log(`[ERROR] Executing - ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
