@@ -1,12 +1,31 @@
 import { Injectable } from "@tsed/di";
 import { AccountLayout, TOKEN_PROGRAM_ID, MintLayout } from "@solana/spl-token";
-import { HttpError, isBase58Encoded, makeRequest, sleep, Solana } from "../utils";
+import {
+  calculateBuyers24h,
+  calculateDailyVolume,
+  calculateDexCount,
+  calculateLiquidityTokenAmount,
+  calculateLiquidityUSD,
+  calculateSellers24h,
+  calculateTransactions24h,
+  fixDecimals,
+  getEmptyRiskAnalysisParams,
+  HttpError,
+  isBase58Encoded,
+  makeRequest,
+  sleep,
+  Solana,
+  STABLE_COIN
+} from "../utils";
 import { GeckoService } from "./GeckoService";
-import { TokenAccountInfo, SPLToken, TokenSupplyInfo } from "types";
-import { UseCache } from "@tsed/platform-cache";
+import { TokenService } from "./TokenService";
 import { GeckoTerminalService } from "./GeckoTerminalService";
+import { TokenAccountInfo, SPLToken, OnchainSupply, RiskAnalysisParams } from "types";
+import { UseCache } from "@tsed/platform-cache";
 import { PublicKey, TransactionSignature, ParsedTransactionWithMeta } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
+import { Token } from "generated/prisma";
+import { JupiterService } from "./JupiterService";
 
 @Injectable()
 export class SolanaService {
@@ -19,15 +38,16 @@ export class SolanaService {
   private BONDING_CURVE_SEED = "bonding-curve";
 
   constructor(
+    private tokenService: TokenService,
     private geckoService: GeckoService,
-    private geckoTerminalService: GeckoTerminalService
+    private geckoTerminalService: GeckoTerminalService,
+    private jupiterService: JupiterService
   ) {}
 
-  public isValidAddress(mintAddress: string) {
+  public isValidAddress(mintAddress: string): boolean {
     try {
-      const key = new PublicKey(mintAddress);
-      return PublicKey.isOnCurve(key.toBytes());
-    } catch (error) {
+      return Boolean(new PublicKey(mintAddress));
+    } catch {
       return false;
     }
   }
@@ -76,7 +96,7 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async fetchAccountInfo(mintAddress: string): Promise<TokenAccountInfo | null> {
+  public async fetchOnchainMetadata(mintAddress: string): Promise<TokenAccountInfo | null> {
     try {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
       if (!isBase58Encoded(mintAddress)) throw new Error("invalid address");
@@ -130,11 +150,11 @@ export class SolanaService {
   }
 
   @UseCache()
-  public async fetchTokenSupply(mintAddress: string): Promise<TokenSupplyInfo | null> {
+  public async fetchOnchainSupply(mintAddress: string): Promise<OnchainSupply | null> {
     try {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
 
-      const accountInfo = await this.fetchAccountInfo(mintAddress);
+      const accountInfo = await this.fetchOnchainMetadata(mintAddress);
       const totalRawSupply = BigInt(accountInfo?.totalSupplyRaw!);
       const divisor = accountInfo?.divisor;
 
@@ -202,11 +222,11 @@ export class SolanaService {
       const totalHoldersCount = allCirculatingAmountsRaw.length;
       let cumulativeRawTotal = 0n;
 
-      let top10HoldersPercentage = 0;
-      let top20HoldersPercentage = 0;
-      let top30HoldersPercentage = 0;
-      let top40HoldersPercentage = 0;
-      let top50HoldersPercentage = 0;
+      let top10HoldersSupplyPercentage = 0;
+      let top20HoldersSupplyPercentage = 0;
+      let top30HoldersSupplyPercentage = 0;
+      let top40HoldersSupplyPercentage = 0;
+      let top50HoldersSupplyPercentage = 0;
 
       for (let i = 0; i < totalHoldersCount; i++) {
         cumulativeRawTotal += allCirculatingAmountsRaw[i];
@@ -215,15 +235,15 @@ export class SolanaService {
         if (circulatingRawSupply > 0n) {
           const percentage = (Number(cumulativeRawTotal) * 100) / Number(circulatingRawSupply);
           if (currentN === 10) {
-            top10HoldersPercentage = percentage;
+            top10HoldersSupplyPercentage = percentage;
           } else if (currentN === 20) {
-            top20HoldersPercentage = percentage;
+            top20HoldersSupplyPercentage = percentage;
           } else if (currentN === 30) {
-            top30HoldersPercentage = percentage;
+            top30HoldersSupplyPercentage = percentage;
           } else if (currentN === 40) {
-            top40HoldersPercentage = percentage;
+            top40HoldersSupplyPercentage = percentage;
           } else if (currentN === 50) {
-            top50HoldersPercentage = percentage;
+            top50HoldersSupplyPercentage = percentage;
             break;
           }
         }
@@ -235,11 +255,11 @@ export class SolanaService {
         totalSupply,
         circulatingSupply,
         totalHoldersCount,
-        top10HoldersPercentage,
-        top20HoldersPercentage,
-        top30HoldersPercentage,
-        top40HoldersPercentage,
-        top50HoldersPercentage,
+        top10HoldersSupplyPercentage,
+        top20HoldersSupplyPercentage,
+        top30HoldersSupplyPercentage,
+        top40HoldersSupplyPercentage,
+        top50HoldersSupplyPercentage,
         burnedTokens
       };
     } catch (error) {
@@ -251,60 +271,194 @@ export class SolanaService {
     }
   }
 
-  // public async getFirstTokenActivity(mintAddress: string): Promise<ParsedTransactionWithMeta | null> {
-  //   try {
-  //     const mintPublicKey = new PublicKey(mintAddress);
+  public async getFirstTokenActivity(mintAddress: string): Promise<ParsedTransactionWithMeta | null> {
+    try {
+      const mintPublicKey = new PublicKey(mintAddress);
 
-  //     const LIMIT = 1000;
-  //     let options: { limit: number; before?: TransactionSignature } = { limit: LIMIT };
+      const LIMIT = 1000;
+      let options: { limit: number; before?: TransactionSignature } = { limit: LIMIT };
 
-  //     let firstTransactionSignature: TransactionSignature | null = null;
-  //     let attempts = 0;
-  //     const MAX_ATTEMPTS = 50;
+      let firstTransactionSignature: TransactionSignature | null = null;
+      let attempts = 0;
+      const MAX_ATTEMPTS = 50;
 
-  //     while (firstTransactionSignature === null && attempts < MAX_ATTEMPTS) {
-  //       attempts++;
+      while (firstTransactionSignature === null && attempts < MAX_ATTEMPTS) {
+        attempts++;
 
-  //       const signatures = await Solana.connection.getSignaturesForAddress(mintPublicKey, options);
+        const signatures = await Solana.connection.getSignaturesForAddress(mintPublicKey, options);
 
-  //       if (signatures.length === 0) {
-  //         break;
-  //       }
+        if (signatures.length === 0) {
+          break;
+        }
 
-  //       if (signatures.length < LIMIT) {
-  //         firstTransactionSignature = signatures[signatures.length - 1].signature;
-  //         console.log(`Search complete in ${attempts} attempt(s).`);
-  //         break;
-  //       }
+        if (signatures.length < LIMIT) {
+          firstTransactionSignature = signatures[signatures.length - 1].signature;
+          console.log(`Search complete in ${attempts} attempt(s).`);
+          break;
+        }
 
-  //       options.before = signatures[signatures.length - 1].signature;
+        options.before = signatures[signatures.length - 1].signature;
 
-  //       await new Promise((resolve) => setTimeout(resolve, 200));
-  //     }
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
 
-  //     if (!firstTransactionSignature) {
-  //       return null;
-  //     }
+      if (!firstTransactionSignature) {
+        return null;
+      }
 
-  //     const firstTransaction = await Solana.connection.getParsedTransaction(firstTransactionSignature, {
-  //       maxSupportedTransactionVersion: 0
-  //     });
+      const firstTransaction = await Solana.connection.getParsedTransaction(firstTransactionSignature, {
+        maxSupportedTransactionVersion: 0
+      });
 
-  //     if (firstTransaction && firstTransaction.blockTime) {
-  //       console.log("First transaction details:");
-  //       console.log(`Timestamp: ${new Date(firstTransaction.blockTime * 1000).toUTCString()}`);
-  //       console.log(`Slot: ${firstTransaction.slot}`);
-  //     } else {
-  //       console.log("Failed to retrieve details or timestamp for the first transaction.");
-  //     }
+      if (firstTransaction && firstTransaction.blockTime) {
+        console.log("First transaction details:");
+        console.log(`Timestamp: ${new Date(firstTransaction.blockTime * 1000).toUTCString()}`);
+        console.log(`Slot: ${firstTransaction.slot}`);
+      } else {
+        console.log("Failed to retrieve details or timestamp for the first transaction.");
+      }
 
-  //     return firstTransaction;
-  //   } catch (error) {
-  //     console.log(`[ERROR] Executing - ${this.constructor.name} getFirstTokenActivity for ${mintAddress}`);
-  //     console.log(error);
-  //     const formattedError = error as unknown as HttpError;
-  //     if (formattedError.status === 404) return null;
-  //     throw new HttpError(formattedError.message, formattedError.status);
-  //   }
-  // }
+      return firstTransaction;
+    } catch (error) {
+      console.log(`[ERROR] Executing - ${this.constructor.name} getFirstTokenActivity for ${mintAddress}`);
+      console.log(error);
+      const formattedError = error as unknown as HttpError;
+      if (formattedError.status === 404) return null;
+      throw new HttpError(formattedError.message, formattedError.status);
+    }
+  }
+
+  public async fetchTokenAnalysisParams(token: Token): Promise<RiskAnalysisParams> {
+    const mintAddress = token.address;
+    let tokenAnalysiParams = getEmptyRiskAnalysisParams();
+    const geckoTerminalTokenInfo = await this.geckoTerminalService.fetchTokenInfo(mintAddress);
+    const geckoTerminalTradeData = await this.geckoTerminalService.fetchTokenTradeData(mintAddress);
+    const onchainMetadata = await this.fetchOnchainMetadata(token.address);
+    const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
+    const tokenInfo = this.tokenService.parsedInfo(token);
+    const impersonator = Boolean(sameSymbolTokens.length > 1 && !tokenInfo.coingecko_verified);
+    const isStableCoin = token.tags.includes(STABLE_COIN);
+    let circulatingSupply = 0;
+    let totalSupply = 0;
+    let totalHolders = 0;
+    let networksCount = 0;
+    let verifiedOnCoingecko = false;
+    let verifiedOnCoingeckoTerminal = false;
+    let top10HolderSupplyPercentage = 0;
+    let top20HolderSupplyPercentage = 0;
+    let freezeAuthority = onchainMetadata?.data.freezeAuthority || null;
+    let mintAuthority = onchainMetadata?.data.mintAuthority || null;
+    let immutableMetadata = Boolean(onchainMetadata?.data.immutableMetadata);
+
+    if (geckoTerminalTokenInfo && geckoTerminalTradeData) {
+      verifiedOnCoingeckoTerminal = true;
+      try {
+        const geckoToken = await this.geckoService.fetchToken(mintAddress);
+        if (geckoToken) {
+          circulatingSupply = geckoToken.circulating_supply;
+          networksCount = Object.keys(geckoToken.platforms).length || 1;
+          verifiedOnCoingecko = true;
+        }
+      } catch (error) {
+        console.log(error);
+        const onchainSupplyData = await this.fetchOnchainSupply(mintAddress);
+        circulatingSupply = onchainSupplyData?.circulatingSupply!;
+        totalSupply = onchainSupplyData?.totalSupply!;
+        totalHolders = onchainSupplyData?.totalHoldersCount!;
+      }
+
+      totalSupply = +geckoTerminalTradeData.data.attributes.normalized_total_supply;
+      totalHolders = geckoTerminalTokenInfo.attributes.holders.count;
+      top10HolderSupplyPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
+      top20HolderSupplyPercentage =
+        top10HolderSupplyPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["11_20"]);
+
+      const txCount24h = calculateTransactions24h(geckoTerminalTradeData);
+
+      tokenAnalysiParams = {
+        ...tokenAnalysiParams,
+        name: token.name,
+        symbol: token.symbol,
+        address: token.address,
+        decimals: geckoTerminalTokenInfo.attributes.decimals,
+        imageUrl: geckoTerminalTokenInfo.attributes.image_url,
+        tags: [...token.tags, ...(isStableCoin ? [STABLE_COIN] : [])],
+        circulatingSupply,
+        totalSupply,
+        totalHolders,
+        top10HolderSupplyPercentage,
+        top20HolderSupplyPercentage,
+        networksCount,
+        verifiedOnCoingecko,
+        verifiedOnCoingeckoTerminal,
+        whaleAccountsAvailable: top20HolderSupplyPercentage > 20,
+        volume24h: geckoTerminalTradeData?.data.attributes.volume_usd.h24
+          ? Number(geckoTerminalTradeData?.data.attributes.volume_usd.h24)
+          : 0,
+        marketCap: Number(geckoTerminalTradeData?.data.attributes.market_cap_usd),
+        liquidityUSD: calculateLiquidityUSD(geckoTerminalTradeData),
+        liquidityTokenAmount: calculateLiquidityTokenAmount(geckoTerminalTradeData),
+        priceUSD: Number(geckoTerminalTradeData?.data?.attributes?.price_usd) || 0,
+        dexCount: calculateDexCount(geckoTerminalTradeData),
+        freezeAuthority,
+        freezeAuthorityAvailable: Boolean(freezeAuthority),
+        mintAuthority,
+        mintAuthorityAvailable: Boolean(mintAuthority),
+        immutableMetadata,
+        isStableCoin,
+        impersonator,
+        symbolCollisionCount: sameSymbolTokens.length,
+        firstOnchainActivity: tokenInfo?.minted_at?.toString() || token.created_at.toString(),
+        dailyVolume: calculateDailyVolume(geckoTerminalTradeData),
+        txCount24h,
+        uniqueBuyers24h: calculateBuyers24h(geckoTerminalTradeData),
+        uniqueSellers24h: calculateSellers24h(geckoTerminalTradeData),
+        twitter: geckoTerminalTokenInfo.attributes.twitter_handle,
+        websites: geckoTerminalTokenInfo.attributes.websites || [],
+        telegram: geckoTerminalTokenInfo.attributes.telegram_handle,
+        discord: geckoTerminalTokenInfo.attributes.discord_url,
+        socialsVerified: true,
+        metadataVerified: true,
+        recentActivity: txCount24h > 0,
+        totalSupplyUnlocked: totalSupply === circulatingSupply
+      };
+    } else {
+      const onchainSupplyData = await this.fetchOnchainSupply(mintAddress);
+      const tokenPrice = await this.jupiterService.fetchTokenPrice(token.address);
+      tokenAnalysiParams = {
+        ...tokenAnalysiParams,
+        name: token.name,
+        symbol: token.symbol,
+        address: token.address,
+        decimals: onchainMetadata?.data.decimals || 0,
+        imageUrl: token.logo_uri,
+        tags: [...token.tags, ...(token.tags.includes(STABLE_COIN) ? [STABLE_COIN] : [])],
+        circulatingSupply: onchainSupplyData?.circulatingSupply || 0,
+        totalSupply: onchainSupplyData?.totalSupply || 0,
+        totalHolders: onchainSupplyData?.totalHoldersCount || 0,
+        top10HolderSupplyPercentage: onchainSupplyData?.top10HoldersSupplyPercentage || 0,
+        top20HolderSupplyPercentage: onchainSupplyData?.top20HoldersSupplyPercentage || 0,
+        totalTransactions: 0,
+        totalTransfers: 0,
+        marketCap: fixDecimals((onchainSupplyData?.circulatingSupply || 1) * Number(tokenPrice), 2),
+        priceUSD: tokenPrice,
+        dailyVolume: 0,
+        networksCount,
+        verifiedOnCoingecko,
+        verifiedOnCoingeckoTerminal,
+        freezeAuthorityAvailable: Boolean(freezeAuthority),
+        mintAuthority,
+        mintAuthorityAvailable: Boolean(mintAuthority),
+        immutableMetadata,
+        isStableCoin,
+        impersonator,
+        socialsVerified: false,
+        metadataVerified: false,
+        recentActivity: false,
+        totalSupplyUnlocked: totalSupply === circulatingSupply
+      };
+    }
+
+    return tokenAnalysiParams;
+  }
 }

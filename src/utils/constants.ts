@@ -3,6 +3,8 @@ export const SOLANA = "solana";
 export const STABLE_COIN = "stablecoin";
 export const MEDIUM_RISK_THRESHOLD = 75;
 export const HIGH_RISK_THRESHOLD = 50;
+export const HOUR_SECONDS = 60 * 60;
+export const HOUR_24_SECONDS = 24 * 60 * 60;
 
 export enum YES_NO {
   YES = "yes",

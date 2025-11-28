@@ -1,0 +1,49 @@
+{
+  "data": {
+    "id": "solana_7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT",
+    "type": "token",
+    "attributes": {
+      "address": "7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT",
+      "name": "UXD Stablecoin",
+      "symbol": "UXD",
+      "decimals": 6,
+      "image_url": "https://coin-images.coingecko.com/coins/images/22850/large/UXD-White.png?1696522151",
+      "image": {
+        "thumb": "https://coin-images.coingecko.com/coins/images/22850/thumb/UXD-White.png?1696522151",
+        "small": "https://coin-images.coingecko.com/coins/images/22850/small/UXD-White.png?1696522151",
+        "large": "https://coin-images.coingecko.com/coins/images/22850/large/UXD-White.png?1696522151"
+      },
+      "coingecko_coin_id": "uxd-stablecoin",
+      "websites": ["https://uxd.fi", "https://docs.uxd.fi"],
+      "discord_url": "https://discord.com/invite/BHfpYmjsBM",
+      "farcaster_url": null,
+      "zora_url": null,
+      "telegram_handle": null,
+      "twitter_handle": "UXDProtocol",
+      "description": "UXD Protocol is an algorithmic stablecoin that is fully backed by a delta-neutral position using derivatives. UXD Protocol is non-custodial, and does not hold user's deposited crypto assets. Users can mint/redeem UXD on a permissionless basis.UXD users can mint 1 UXD for $1 worth of crypto assets. UXD does not require any over-collateralization. ",
+      "gt_score": 31.865431192660548,
+      "gt_score_details": {
+        "pool": 15.625,
+        "transaction": 6.667,
+        "creation": 100,
+        "info": 100,
+        "holders": 80
+      },
+      "categories": [],
+      "gt_category_ids": [],
+      "holders": {
+        "count": 7354,
+        "distribution_percentage": {
+          "top_10": "84.2966",
+          "11_20": "6.6687",
+          "21_40": "3.7025",
+          "rest": "5.3322"
+        },
+        "last_updated": "2025-11-26T21:00:48Z"
+      },
+      "mint_authority": null,
+      "freeze_authority": null,
+      "is_honeypot": "unknown"
+    }
+  }
+}

@@ -14,6 +14,7 @@ import { config } from "./config";
 import * as v1 from "./controllers/v1";
 import { envs } from "./config/envs";
 import { RedisShutdownService } from "./services/RedisShutdownService";
+import { HOUR_SECONDS } from "./utils";
 
 @Configuration({
   ...config,
@@ -24,7 +25,7 @@ import { RedisShutdownService } from "./services/RedisShutdownService";
     "/v1": [...Object.values(v1)]
   },
   cache: {
-    store: redisStore.create({ host: envs.REDIS_HOST, port: envs.REDIS_PORT, ttl: envs.REDIS_TTL }),
+    store: redisStore.create({ host: envs.REDIS_HOST, port: envs.REDIS_PORT, ttl: HOUR_SECONDS }),
     prefix: process.env.NODE_ENV
   },
   imports: [PlatformCache, RedisShutdownService],

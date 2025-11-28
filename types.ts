@@ -49,54 +49,172 @@ export interface CoingeckoSimpleToken {
   platforms: Record<string, string>;
 }
 
-export interface CoingeckoFullToken {
+export interface CoingeckoTokenData {
   id: string;
   symbol: string;
   name: string;
-  platforms: Record<"solana" | "ethereum", string>;
-  // market_cap: number;
+  platforms: Record<
+    | "solana"
+    | "ethereum"
+    | "polkadot"
+    | "flow"
+    | "avalanche"
+    | "optimistic-ethereum"
+    | "stellar"
+    | "near-protocol"
+    | "hedera-hashgraph"
+    | "zksync"
+    | "tron"
+    | "celo"
+    | "arbitrum-one"
+    | "base"
+    | "polygon-pos",
+    string
+  >;
+  market_cap: number;
   fully_diluted_valuation: number;
   categories: string[];
   total_supply: number;
   max_supply: number;
   max_supply_infinite: boolean;
   circulating_supply: number;
-  // market_cap_rank: number;
+  market_cap_rank: number;
 }
 
-export interface CoingeckoTerminalTokenPool {
+export interface GeckoTerminalTokenTopPools {
   id: string;
   type: string;
 }
 
-export interface CoingeckoTerminalToken {
+interface GeckoTerminalTokenLP {
   id: string;
   type: string;
   attributes: {
+    base_token_price_usd: string;
+    base_token_price_native_currency: string;
+    base_token_balance: string;
+    base_token_liquidity_usd: string;
+    quote_token_price_usd: string;
+    quote_token_price_native_currency: string;
+    quote_token_balance: string;
+    quote_token_liquidity_usd: string;
+    base_token_price_quote_token: string;
+    quote_token_price_base_token: string;
     address: string;
     name: string;
-    symbol: string;
-    decimals: number;
-    image_url: string;
-    coingecko_coin_id: string;
-    total_supply: string;
-    normalized_total_supply: string;
-    price_usd: string;
+    pool_created_at: string;
+    token_price_usd: string;
     fdv_usd: string;
-    total_reserve_in_usd: string;
-    volume_usd: {
+    market_cap_usd: string;
+    price_change_percentage: {
+      m5: string;
+      m15: string;
+      m30: string;
+      h1: string;
+      h6: string;
       h24: string;
     };
-    // market_cap_usd: string;
+    transactions: {
+      m5: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+      m15: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+      m30: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+      h1: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+      h6: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+      h24: {
+        buys: number;
+        sells: number;
+        buyers: number;
+        sellers: number;
+      };
+    };
+    volume_usd: {
+      m5: string;
+      m15: string;
+      m30: string;
+      h1: string;
+      h6: string;
+      h24: string;
+    };
+    reserve_in_usd: string;
   };
   relationships: {
-    top_pools: {
-      data: CoingeckoTerminalTokenPool[];
+    base_token: {
+      data: {
+        id: string;
+        type: string;
+      };
+    };
+    quote_token: {
+      data: {
+        id: string;
+        type: string;
+      };
+    };
+    dex: {
+      data: {
+        id: string;
+        type: string;
+      };
     };
   };
 }
 
-export interface CoingeckoTerminalTokenInfo {
+export interface GeckoTerminalTradeData {
+  data: {
+    id: string;
+    type: string;
+    attributes: {
+      address: string;
+      name: string;
+      symbol: string;
+      decimals: number;
+      image_url: string;
+      coingecko_coin_id: string;
+      total_supply: string;
+      normalized_total_supply: string;
+      price_usd: string;
+      fdv_usd: string;
+      total_reserve_in_usd: string;
+      volume_usd: {
+        h24: string;
+      };
+      market_cap_usd: string;
+    };
+    relationships: {
+      top_pools: {
+        data: GeckoTerminalTokenTopPools[];
+      };
+    };
+  };
+  included: GeckoTerminalTokenLP[];
+}
+
+export interface GeckoTerminalTokenInfo {
   id: string;
   type: string;
   attributes: {
@@ -142,26 +260,6 @@ export interface CoingeckoTerminalTokenInfo {
   };
 }
 
-export interface RiskAnalysisParams {
-  totalSupply: number;
-  frozenSupply: number;
-  circulatingSupply: number;
-  top10HolderSupplyPercentage: number;
-  top20HolderSupplyPercentage: number;
-  top30HolderSupplyPercentage: number;
-  top40HolderSupplyPercentage: number;
-  top50HolderSupplyPercentage: number;
-  firstOnchainActivity: number;
-  totalHolders: number;
-  dailyVolume: number;
-  marketCap: number;
-  impersonator: boolean;
-  freezeAuthorityAvailable: boolean;
-  mintAuthorityAvailable: boolean;
-  immutableMetadata: boolean;
-  isStableCoin: boolean;
-}
-
 export interface TokenAccountInfo {
   data: {
     mintAuthority: string | null;
@@ -181,50 +279,48 @@ export interface TokenAccountInfo {
   isPumpFun: boolean;
 }
 
-export interface TokenSupplyInfo {
-  top10HoldersPercentage: number;
-  top20HoldersPercentage: number;
-  top30HoldersPercentage: number;
-  top40HoldersPercentage: number;
-  top50HoldersPercentage: number;
+export interface OnchainSupply {
+  top10HoldersSupplyPercentage: number;
+  top20HoldersSupplyPercentage: number;
+  top30HoldersSupplyPercentage: number;
+  top40HoldersSupplyPercentage: number;
+  top50HoldersSupplyPercentage: number;
   totalHoldersCount: number;
   circulatingSupply: number;
   totalSupply: number;
   burnedTokens: number;
 }
 
-export interface TokenSnifferData {
+export interface RiskAnalysisParams {
   /* ========== BASIC TOKEN INFO ========== */
   symbol: string; // done
   name: string; // done
   address: string; // done
   decimals: number; // done
-  imageUrl?: string | null; // done but needs to update from gecko terminal
-  tags?: string[]; // done
+  imageUrl: string | null; // done but needs to update from gecko terminal
+  tags: string[]; // done
 
   /* ========== SUPPLY & DISTRIBUTION ========== */
   totalSupply: number; // done
   circulatingSupply: number; // done
-  burnedSupply: number;
-  burnedPercentage: number;
+  totalSupplyUnlocked: boolean;
+  // burnedSupply: number;
+  // burnedPercentage: number;
+  networksCount: number;
+  dexCount: number;
 
   top10HolderSupplyPercentage: number; // done
   top20HolderSupplyPercentage: number; // done
-  top30HolderSupplyPercentage: number; // done
-  top40HolderSupplyPercentage: number; // done
-  top50HolderSupplyPercentage: number; // done
 
   totalHolders: number; // done
-  whaleAccountsCount: number;
-  whaleAccountsSupplyPercentage: number;
-  holderDistributionScore?: number;
+  whaleAccountsAvailable: boolean;
 
   /* ========== MARKET DATA ========== */
-  dailyVolume: number;
+  volume24h: number;
   marketCap: number; // done
-  liquidityUSD?: number;
-  liquidityTokenAmount?: number;
-  priceUSD?: number;
+  liquidityUSD: number;
+  liquidityTokenAmount: number;
+  priceUSD: number;
 
   /* ========== AUTHORITY & TOKEN SECURITY ========== */
   freezeAuthority: string | null; // done
@@ -234,51 +330,46 @@ export interface TokenSnifferData {
   mintAuthorityAvailable: boolean; // done
 
   immutableMetadata: boolean; // done
+  isStableCoin: boolean;
 
   /* ========== IMPERSONATION & NAME RISK ========== */
   impersonator: boolean; // done
-  symbolCollisionCount?: number;
-  similarTokenNames?: string[];
+  symbolCollisionCount: number;
+  // similarTokenNames: string[];
 
-  /* ========== RUG-PULL / BEHAVIORAL FLAGS ========== */
-  hasRenouncedMint: boolean; // done
-  hasRenouncedFreeze: boolean; // done
-
-  programId: string; // SPL Program ID
-  ownerProgram: string; // program of mint account
-  verifiedOnRaydium?: boolean;
-  verifiedOnCoingecko?: boolean;
-  verifiedOnJupiter?: boolean;
+  // programId: string; // SPL Program ID
+  // ownerProgram: string; // program of mint account
+  verifiedOnRaydium: boolean;
+  verifiedOnCoingecko: boolean;
+  verifiedOnCoingeckoTerminal: boolean;
+  verifiedOnJupiter: boolean;
 
   /* ========== LIQUIDITY POOL ANALYSIS ========== */
-  lpLockedPercentage?: number; // how much LP is locked
-  lpUnlockDate?: string | null; // when liquidity unlocks
-  lpCreatorShare?: number; // % LP owned by deployer
-  lpTokenAddress?: string;
+  // lpLockedPercentage: number; // how much LP is locked
+  // lpUnlockDate: string | null; // when liquidity unlocks
+  // lpCreatorShare: number; // % LP owned by deployer
+  // lpTokenAddress: string;
 
   /* ========== TRANSACTION & HOLDER BEHAVIOR ========== */
   firstOnchainActivity: string; // done
-  createdAtBlock?: number;
-  txCount24h?: number;
-  uniqueBuyers24h?: number;
-  uniqueSellers24h?: number;
-  whaleCount?: number; // # of wallets with >1% supply
-  suspiciousWallets?: string[];
+  dailyVolume: number;
+  txCount24h: number;
+  uniqueBuyers24h: number;
+  uniqueSellers24h: number;
+  // whaleCount: number; // # of wallets with >1% supply
+  // suspiciousWallets: string[];
 
   /* ========== TRANSACTIONS ========== */
-  totalTransactions?: string | null;
-  totalTransfers?: string | null;
+  totalTransactions: number;
+  totalTransfers: number;
+  recentActivity: boolean;
 
   /* ========== SOCIAL / EXTERNAL SIGNALS ========== */
-  twitter?: string | null;
-  website?: string | null;
-  telegram?: string | null;
-  discord?: string | null;
-  github?: string | null;
-  socialsVerified?: boolean;
-
-  /* ========== RISK ENGINE OUTPUTS ========== */
-  score: number; // final risk score (0–100)
-  totalScore: number;
-  risk: RISK_STATUS;
+  twitter: string | null;
+  websites: string[];
+  telegram: string | null;
+  discord: string | null;
+  github: string | null;
+  socialsVerified: boolean;
+  metadataVerified: boolean;
 }

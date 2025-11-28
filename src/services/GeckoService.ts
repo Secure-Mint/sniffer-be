@@ -1,6 +1,6 @@
 import { Injectable } from "@tsed/di";
-import { HttpError, makeRequest, SOLANA } from "../utils";
-import { CoingeckoFullToken } from "types";
+import { HOUR_24_SECONDS, HttpError, makeRequest, SOLANA } from "../utils";
+import { CoingeckoTokenData } from "types";
 import { envs } from "../config/envs";
 import { UseCache } from "@tsed/platform-cache";
 
@@ -33,8 +33,8 @@ export class GeckoService {
     }
   }
 
-  @UseCache()
-  public async fetchToken(address: string): Promise<CoingeckoFullToken | null> {
+  @UseCache({ ttl: HOUR_24_SECONDS })
+  public async fetchToken(address: string): Promise<CoingeckoTokenData | null> {
     try {
       console.log(`[CACHE CHECK] Executing ${this.constructor.name} - fetchTokenInfo for ${address}`);
       const { data } = await makeRequest({
@@ -49,8 +49,8 @@ export class GeckoService {
         symbol: data.symbol.toUpperCase(),
         name: data.name,
         platforms: data.platforms,
-        // market_cap_rank: data.market_cap_rank,
-        // market_cap: data.market_data.market_cap["usd"],
+        market_cap_rank: data.market_cap_rank,
+        market_cap: data.market_data.market_cap["usd"],
         fully_diluted_valuation: data.market_data.fully_diluted_valuation["usd"],
         categories: data.categories,
         total_supply: data.market_data.total_supply,
