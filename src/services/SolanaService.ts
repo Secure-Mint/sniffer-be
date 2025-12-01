@@ -384,7 +384,9 @@ export class SolanaService {
         volume24h: geckoTerminalTradeData?.data.attributes.volume_usd.h24
           ? Number(geckoTerminalTradeData?.data.attributes.volume_usd.h24)
           : 0,
-        marketCap: Number(geckoTerminalTradeData?.data.attributes.market_cap_usd),
+        marketCap:
+          Number(geckoTerminalTradeData?.data.attributes.price_usd) *
+          Number(geckoTerminalTradeData.data.attributes.normalized_total_supply),
         liquidityUSD: calculateLiquidityUSD(geckoTerminalTradeData),
         liquidityTokenAmount: calculateLiquidityTokenAmount(geckoTerminalTradeData),
         priceUSD: Number(geckoTerminalTradeData?.data?.attributes?.price_usd) || 0,

@@ -249,9 +249,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
     whaleAccountsAvailable
   } = token;
 
-  // ---------------------------------------------------------------------
-  // 0. Stablecoins (auto strong score)
-  // ---------------------------------------------------------------------
+  // === 0. Stablecoins (auto strong score) ========================================
+
   // if (isStableCoin) {
   //   return {
   //     totalScore: MAX_SCORE,
@@ -260,9 +259,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   //   };
   // }
 
-  // ---------------------------------------------------------------------
-  // 1. Holder Concentration
-  // ---------------------------------------------------------------------
+  // === 1. Holder Concentration ========================================
+
   let concentrationPenalty = 0;
   if (!top10HolderSupplyPercentage || top10HolderSupplyPercentage > 15)
     concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * 0.5;
@@ -272,9 +270,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
 
   if (whaleAccountsAvailable) score += 5;
 
-  // ---------------------------------------------------------------------
-  // 2. Verification
-  // ---------------------------------------------------------------------
+  // === 2. Verification ========================================
+
   if (!verifiedOnCoingecko) score -= NOT_VERIFIED_COINGECKO_PENALTY;
   else score += NOT_VERIFIED_COINGECKO * NUMBERS.TWENTY_FIVE_PERCCENT;
 
@@ -284,26 +281,22 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   if (!socialsVerified) score -= SOCIALS_MISSING_PENALTY;
   if (!metadataVerified) score -= METADATA_NOT_VERIFIED_PENALTY;
 
-  // ---------------------------------------------------------------------
-  // 3. Authorities & Metadata
-  // ---------------------------------------------------------------------
+  // === 3. Authorities & Metadata ========================================
+
   if (!isStableCoin && mintAuthorityAvailable) score -= MINT_AUTHORITY_PENALTY;
   if (!isStableCoin && freezeAuthorityAvailable) score -= FREEZE_AUTHORITY_PENALTY;
   if (!immutableMetadata) score -= METADATA_NOT_IMMUTABLE_PENALTY;
 
-  // ---------------------------------------------------------------------
-  // 4. Identity / Impersonation
-  // ---------------------------------------------------------------------
+  // === 4. Identity / Impersonation ========================================
+
   if (impersonator) score -= IMPERSONATOR_PENALTY;
 
-  // ---------------------------------------------------------------------
-  // 5. Symbol Collisions
-  // ---------------------------------------------------------------------
-  score -= Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
+  // === 5. Symbol Collisions ========================================
 
-  // ---------------------------------------------------------------------
-  // 6. Liquidity
-  // ---------------------------------------------------------------------
+  if (impersonator) score -= Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
+
+  // === 6. Liquidity ========================================
+
   if (liquidityUSD < NUMBERS.THOUSAND) score -= 20;
   else if (liquidityUSD < NUMBERS.TEN_THOUSAND) score -= 18;
   else if (liquidityUSD < NUMBERS.FIFTY_THOUSAND) score -= 15;
@@ -314,9 +307,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   else if (liquidityUSD < NUMBERS.TWO_MILLION) score -= 5;
   else if (liquidityUSD < NUMBERS.FIVE_MILLION) score -= 3;
 
-  // ---------------------------------------------------------------------
-  // 7. Market Cap Bonuses / Penalties (scaled)
-  // ---------------------------------------------------------------------
+  // === 7. Market Cap Bonuses / Penalties (scaled) ========================================
+
   if (marketCap < NUMBERS.TWENTY_FIVE_THOUSAND) score -= MARKETCAP_PENALTY.TINY;
   else if (marketCap < NUMBERS.HUNDRED_THOUSAND) score -= MARKETCAP_PENALTY.SMALL;
   else if (marketCap < NUMBERS.FIVE_HUNDRED_THOUSAND) score -= MARKETCAP_PENALTY.MID;
@@ -327,9 +319,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   else if (marketCap > NUMBERS.FIVE_MILLION) score += MARKETCAP_BONUS.SMALL;
   else if (marketCap > NUMBERS.MILLION) score += MARKETCAP_BONUS.TINY;
 
-  // ---------------------------------------------------------------------
-  // 8. Volume Bonuses / Penalties (scaled)
-  // ---------------------------------------------------------------------
+  // === 8. Volume Bonuses / Penalties (scaled) ========================================
+
   if (!isStableCoin) {
     if (dailyVolume < NUMBERS.TWO_THOUSAND) score -= VOLUME_PENALTY_LOW;
     else if (dailyVolume < NUMBERS.TEN_THOUSAND) score -= VOLUME_PENALTY_MID;
@@ -339,33 +330,31 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
     else if (dailyVolume > NUMBERS.HUNDRED_THOUSAND) score += VOLUME_BONUS.NORMAL;
   }
 
-  // ---------------------------------------------------------------------
-  // 9. Activity
-  // ---------------------------------------------------------------------
-  if (!recentActivity || txCount24h === 0) score -= NO_ACTIVITY_24H_PENALTY;
-  if (uniqueBuyers24h < uniqueSellers24h) score -= BUYER_SELLER_IMBALANCE;
+  // === 9. Activity ========================================
 
-  // ---------------------------------------------------------------------
-  // 10. Total Holders
-  // ---------------------------------------------------------------------
-  if (totalHolders < NUMBERS.FIVE_HUNDRED) score -= HOLDERS_PENALTY.EXTREME;
-  else if (totalHolders < NUMBERS.TEN_THOUSAND) score -= HOLDERS_PENALTY.VERY_HIGH;
-  else if (totalHolders < NUMBERS.FIFTY_THOUSAND) score -= HOLDERS_PENALTY.HIGH;
-  else if (totalHolders < NUMBERS.HUNDRED_THOUSAND) score -= HOLDERS_PENALTY.MODERATE;
-  else if (totalHolders < NUMBERS.TWO_FIFTY_THOUSAND) score -= HOLDERS_PENALTY.LOW;
-  else if (totalHolders < NUMBERS.FIVE_HUNDRED_THOUSAND) score -= HOLDERS_PENALTY.VERY_LOW;
+  if (!isStableCoin) {
+    if (!recentActivity || txCount24h === 0) score -= NO_ACTIVITY_24H_PENALTY;
+    if (uniqueBuyers24h < uniqueSellers24h) score -= BUYER_SELLER_IMBALANCE;
+  }
 
-  // ---------------------------------------------------------------------
-  // 11. Token Age
-  // ---------------------------------------------------------------------
+  // === 10. Total Holders ========================================
+
+  if (totalHolders < NUMBERS.TWO_THOUSAND) score -= HOLDERS_PENALTY.EXTREME;
+  else if (totalHolders < NUMBERS.FIVE_THOUSAND) score -= HOLDERS_PENALTY.VERY_HIGH;
+  else if (totalHolders < NUMBERS.TEN_THOUSAND) score -= HOLDERS_PENALTY.HIGH;
+  else if (totalHolders < NUMBERS.TWENTY_FIVE_THOUSAND) score -= HOLDERS_PENALTY.MODERATE;
+  else if (totalHolders < NUMBERS.FIFTY_THOUSAND) score -= HOLDERS_PENALTY.LOW;
+  else if (totalHolders < NUMBERS.HUNDRED_THOUSAND) score -= HOLDERS_PENALTY.VERY_LOW;
+
+  // === 11. Token Age ========================================
+
   const ageDays = (Date.now() - new Date(firstOnchainActivity).getTime()) / 86400000;
   if (ageDays < 3) score -= AGE_PENALTY.NEW;
   else if (ageDays < 7) score -= AGE_PENALTY.WEEK;
   else if (ageDays < 30) score -= AGE_PENALTY.MONTH;
 
-  // ---------------------------------------------------------------------
-  // 12. Supply Inflation
-  // ---------------------------------------------------------------------
+  // === 12. Supply Inflation ========================================
+
   if (circulatingSupply > 0) {
     const supplyRatio = totalSupply / circulatingSupply;
     if (supplyRatio > 1.5) score -= SUPPLY_PENALTY_HIGH;
@@ -374,9 +363,7 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
     score -= SUPPLY_PENALTY_HIGH;
   }
 
-  // ---------------------------------------------------------------------
-  // 13. Networks & DEX
-  // ---------------------------------------------------------------------
+  // === 13. Networks & DEX ========================================
 
   if (!isStableCoin) {
     if (networksCount <= 1) score -= NETWORK_LOW;
@@ -386,9 +373,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   if (dexCount <= 1) score -= DEX_LOW;
   else if (dexCount >= 5) score += DEX_HIGH_BONUS;
 
-  // ---------------------------------------------------------------------
-  // 14. Social Presence
-  // ---------------------------------------------------------------------
+  // === 14. Social Presence ========================================
+
   const socialCount = [twitter, telegram, discord, ...(websites || [])].filter(Boolean).length;
   if (socialCount === 0) score -= SOCIAL_NONE;
   else if (socialCount === 1) score -= SOCIAL_FEW;
@@ -396,9 +382,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
 
   if (isStableCoin && score <= 70) score += STABLE_COIN_BONUS;
 
-  // ---------------------------------------------------------------------
-  // 15. Clamp final score
-  // ---------------------------------------------------------------------
+  // === 15. Clamp final score ========================================
+
   score = clamp(Math.round(score), MIN_SCORE, MAX_SCORE);
 
   return {
@@ -420,30 +405,22 @@ export const calculateLightRiskScore = (
   const {
     circulatingSupply,
     totalSupply,
-    totalHolders,
     top10HolderSupplyPercentage,
     top20HolderSupplyPercentage,
     whaleAccountsAvailable,
-
     networksCount,
     verifiedOnCoingecko,
     verifiedOnCoingeckoTerminal,
-
     freezeAuthorityAvailable,
     mintAuthorityAvailable,
     immutableMetadata,
-
     impersonator,
-
     socialsVerified,
     metadataVerified,
-
     recentActivity
   } = token;
 
-  // =====================================================================
   // === 1. Holders Concentration ========================================
-  // =====================================================================
 
   let concentrationPenalty = 0;
   if (!top10HolderSupplyPercentage || top10HolderSupplyPercentage > 15)
@@ -454,23 +431,17 @@ export const calculateLightRiskScore = (
 
   if (whaleAccountsAvailable) score += 5;
 
-  // =====================================================================
   // === 2. Authorities & Metadata =======================================
-  // =====================================================================
 
   if (mintAuthorityAvailable) score -= MINT_AUTHORITY_PENALTY;
   if (freezeAuthorityAvailable) score -= FREEZE_AUTHORITY_PENALTY;
   if (!immutableMetadata) score -= NON_IMMUTABLE_METADATA_PENALTY;
 
-  // =====================================================================
   // === 3. Identity Risks ===============================================
-  // =====================================================================
 
   if (impersonator) score -= IMPERSONATOR_PENALTY;
 
-  // =====================================================================
   // === 4. Verification ==================================================
-  // =====================================================================
 
   if (!verifiedOnCoingecko) score -= NOT_VERIFIED_COINGECKO_PENALTY;
   if (!verifiedOnCoingeckoTerminal) score -= NOT_VERIFIED_GECKOTERMINAL_PENALTY;
@@ -478,16 +449,12 @@ export const calculateLightRiskScore = (
   if (!socialsVerified) score -= SOCIALS_MISSING_PENALTY;
   if (!metadataVerified) score -= METADATA_NOT_VERIFIED_PENALTY;
 
-  // =====================================================================
   // === 5. Network Presence (Credibility) ================================
-  // =====================================================================
 
   if (networksCount <= 1) score -= NETWORKS_LOW_PENALTY;
   if (networksCount >= 3) score += NETWORKS_HIGH_BONUS;
 
-  // =====================================================================
   // === 6. Supply Inflation ==============================================
-  // =====================================================================
 
   if (circulatingSupply <= 0 && totalSupply > 0) {
     score -= 10;
@@ -497,9 +464,7 @@ export const calculateLightRiskScore = (
     else if (supplyRatio > 1.2) score -= 5;
   }
 
-  // =====================================================================
   // === 7. Activity ======================================================
-  // =====================================================================
 
   if (!recentActivity) score -= NO_RECENT_ACTIVITY_PENALTY;
 

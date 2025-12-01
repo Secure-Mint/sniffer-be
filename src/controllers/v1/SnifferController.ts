@@ -29,6 +29,9 @@ export class SnifferController {
     const analysisParams = await this.solanaService.fetchTokenAnalysisParams(token);
     const score = calculateRiskScore(analysisParams);
 
+    console.log(analysisParams);
+    console.log(score);
+
     const snifferData: SnifferModel = {
       symbol: token.symbol,
       imageUrl: analysisParams.imageUrl,

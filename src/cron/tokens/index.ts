@@ -5,6 +5,7 @@ import { TokenService } from "../../services/TokenService";
 import { GeckoService } from "../../services/GeckoService";
 import { JupiterService } from "../../services/JupiterService";
 import { TokenExtendedInfo } from "../../models";
+import { token } from "@metaplex-foundation/js";
 
 const tokenService = new TokenService();
 const geckoService = new GeckoService();
@@ -232,7 +233,8 @@ const fetchAndSaveStableCoins = async () => {
               token_program: jupiterToken.tokenProgram || null
             };
 
-            const tags = jupiterToken.tags?.filter((item: string) => item !== "unknown") || [];
+            let tags = [...dbToken.tags, ...(jupiterToken.tags?.filter((item: string) => item !== "unknown") || [])];
+            tags = [...new Set(tags)];
             tags.push(STABLE_COIN);
 
             prismaPromises.push(
