@@ -14,10 +14,8 @@ export class SnifferModel {
   @Required() public readonly totalHolders: number;
   @Required() public readonly top10HolderSupplyPercentage: number;
   @Required() public readonly top20HolderSupplyPercentage: number;
-  @Required() public readonly haswhaleAccounts: boolean;
   @Required() public readonly impersonator: boolean;
   @Required() public readonly isStableCoin: boolean;
-  @Required() public readonly isHoneyPot: boolean;
   @Nullable(String) public readonly freezeAuthority: string | null;
   @Required() public readonly freezeAuthorityAvailable: boolean;
   @Nullable(String) public readonly mintAuthority: string | null;

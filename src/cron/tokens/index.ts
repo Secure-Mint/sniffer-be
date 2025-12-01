@@ -1,163 +1,283 @@
-/**
- * This cronjob is outdated and needs refactor
- * There is no way fetch all tokens at once from jupiter's free API
- * We need to loop through new endpoints to fetch tokens
- */
-
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-
-const { streamArray } = require("stream-json/streamers/StreamArray");
-const { parser } = require("stream-json/parser");
-const { chain } = require("stream-chain");
-
 import { Prisma, PrismaPromise } from "generated/prisma";
-import { Solana, SOLANA, STABLE_COIN } from "../../utils";
+import { HTTP_STATUS_404, HttpError, sleep, Solana, SOLANA, STABLE_COIN } from "../../utils";
 import { prisma } from "../../services/PrismaService";
-import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { GeckoService } from "../../services/GeckoService";
-import { GeckoTerminalService } from "../../services/GeckoTerminalService";
 import { JupiterService } from "../../services/JupiterService";
 import { TokenExtendedInfo } from "../../models";
-import { CoingeckoSimpleToken } from "../../../types";
-import { createReadStream } from "fs";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import fs from "fs/promises";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const tokenService = new TokenService();
 const geckoService = new GeckoService();
-const geckoTerminalService = new GeckoTerminalService();
 const jupiterService = new JupiterService();
-const solanaService = new SolanaService(geckoService, geckoTerminalService);
 
-const CHUNK_SIZE = 500;
-const FILE_PATH = `${__dirname}/jupiter_tokens.json`;
+const MAX_COUNT = 20;
 
-const fetchAndSaveTokens = async () => {
+const fetchAndSaveJupiterTokens = async () => {
   console.log("FETCHING TOKENS FROM JUPITER ...");
-  await jupiterService.downloadJsonToFile(FILE_PATH);
-  const stablecoins = await solanaService.fetchSPLStableCoins();
-  const coinGeckoTokens: CoingeckoSimpleToken[] = await geckoService.fetchTokens();
+  const jupiterVerifiedTokens = await jupiterService.fetchVerifiedTokens();
+  console.log(`TOTAL TOKENS ON JUPITER: ${jupiterVerifiedTokens.length} \n`);
+
+  try {
+    let count = 0;
+    let prismaPromises: PrismaPromise<any>[] = [];
+
+    for (let index = 0; index < jupiterVerifiedTokens.length; index++) {
+      const jupiterToken = jupiterVerifiedTokens[index];
+      const mintAddress = jupiterToken.id;
+      const dbToken = await tokenService.findByAddress(mintAddress);
+      const tags = jupiterToken.tags.filter((item: string) => item !== "unknown");
+
+      const info = {
+        coingecko_id: null,
+        coingecko_verified: false,
+        jupiter_verified: true,
+        minted_at: null,
+        token_program: jupiterToken.tokenProgram || null
+      };
+
+      if (!dbToken) {
+        const tokenData = {
+          data: {
+            address: mintAddress.trim(),
+            name: jupiterToken.name,
+            symbol: jupiterToken.symbol.toUpperCase(),
+            platform_id: SOLANA,
+            tags,
+            info: info as unknown as Prisma.JsonObject,
+            created_at: new Date(jupiterToken?.createdAt?.toString() || jupiterToken?.firstPool?.createdAt || new Date()),
+            updated_at: new Date(jupiterToken?.updatedAt.toString()),
+            deleted_at: null
+          }
+        };
+        prismaPromises.push(prisma.token.create(tokenData));
+        count++;
+        console.log(`PUSHED TOKEN TO PROMISE ARRAY: ${mintAddress}`);
+      }
+
+      if (count === MAX_COUNT) {
+        console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+        await Promise.all(prismaPromises);
+        count = 0;
+        prismaPromises = [];
+      }
+    }
+
+    if (prismaPromises.length) {
+      console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+      await Promise.all(prismaPromises);
+    }
+
+    console.log("----------- SAVED TOKENS FROM JUPITER ----------- \n\n");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const fetchAndSaveCoinGeckoTokens = async () => {
+  console.log("FETCHING TOKENS FROM COINGECKO ...");
+  const { solanaTokens: coinGeckoTokens } = await geckoService.fetchTokens();
   console.log(`TOTAL SOLANA TOKENS ON COIN GECKO: ${coinGeckoTokens.length} \n`);
 
-  await new Promise<void>((resolve, reject) => {
-    const jupiterTokens: any[] = [];
-    let totalCount = 0;
-    let chunkIndex = 1;
+  try {
+    let count = 0;
+    let prismaPromises: PrismaPromise<any>[] = [];
 
-    const pipeline = chain([createReadStream(FILE_PATH), parser(), streamArray()]);
+    for (let index = 0; index < coinGeckoTokens.length; index++) {
+      const geckoToken = coinGeckoTokens[index];
+      const mintAddress = geckoToken.platforms.solana || null;
 
-    pipeline.on("data", async ({ value }: any) => {
-      jupiterTokens.push(value);
-      totalCount++;
+      if (mintAddress) {
+        const dbToken = await tokenService.findByAddress(mintAddress);
+        const dbTokenInfo = (dbToken?.info as unknown as TokenExtendedInfo) || {};
 
-      if (jupiterTokens.length >= CHUNK_SIZE) {
-        pipeline.pause();
-        try {
-          const prismaPromises: PrismaPromise<any>[] = [];
-          const mappedjupiterTokens = jupiterTokens.map(({ logoURI, ...rest }: any) => {
-            return {
-              ...rest,
-              symbol: rest.symbol.toUpperCase(),
-              logo_uri: logoURI
-            };
-          });
+        if (!dbToken) {
+          let jupiterToken = null;
 
-          for (let index = 0; index < mappedjupiterTokens.length; index++) {
-            const jupiterToken = mappedjupiterTokens[index];
-            const dbToken = await tokenService.findByAddress(jupiterToken.address);
-            const dbTokenInfo = dbToken?.info as unknown as TokenExtendedInfo;
-
-            const coinGeckoToken = coinGeckoTokens.find((x) => x.id === jupiterToken?.extensions?.coingeckoId);
-            const coingeckoId = coinGeckoToken?.id;
-            const tokenAddressMatched = coinGeckoToken?.platforms?.solana?.trim() === jupiterToken?.address?.trim();
-
-            const tags = jupiterToken.tags.filter((item: string) => item !== "unknown");
-
-            const isVerifiedStablecoin = stablecoins.find((stable) => stable.address === jupiterToken.address);
-            if (isVerifiedStablecoin) tags.push(STABLE_COIN);
-
-            const info = {
-              coingecko_id: coingeckoId || null,
-              coingecko_verified: tokenAddressMatched,
-              minted_at: jupiterToken?.minted_at || null,
-              daily_volume: jupiterToken?.daily_volume || 0
-            };
-
-            if (!dbToken) {
-              prismaPromises.push(
-                prisma.token.create({
-                  data: {
-                    address: jupiterToken.address,
-                    name: jupiterToken.name,
-                    symbol: jupiterToken.symbol.toUpperCase(),
-                    logo_uri: jupiterToken.logo_uri,
-                    platform_id: SOLANA,
-                    tags,
-                    info: info as unknown as Prisma.JsonObject,
-                    created_at: new Date(jupiterToken.created_at),
-                    updated_at: new Date(jupiterToken.created_at),
-                    deleted_at: null
-                  }
-                })
-              );
-            } else if (dbTokenInfo.coingecko_id !== info.coingecko_id || dbTokenInfo.coingecko_verified != info.coingecko_verified) {
-              prismaPromises.push(
-                prisma.token.update({
-                  where: { id: dbToken?.id },
-                  data: {
-                    tags: tags,
-                    info: info,
-                    updated_at: new Date()
-                  }
-                })
-              );
-            } else if (jupiterToken.extensions?.coingeckoId !== dbTokenInfo.coingecko_id) {
-              prismaPromises.push(
-                prisma.token.update({
-                  where: { id: dbToken?.id },
-                  data: {
-                    logo_uri: jupiterToken.logo_uri,
-                    info: { ...dbTokenInfo, coingecko_id: jupiterToken.extensions?.coingeckoId || null },
-                    updated_at: new Date()
-                  }
-                })
-              );
-            }
+          try {
+            jupiterToken = await jupiterService.fetchTokenByMint(mintAddress);
+          } catch (error) {
+            const formattedError = error as unknown as HttpError;
+            if (formattedError.status === HTTP_STATUS_404) continue;
           }
 
-          await Promise.all(prismaPromises);
-          console.log("SAVED TOKENS ...", chunkIndex * CHUNK_SIZE, "\n");
-          chunkIndex++;
-          jupiterTokens.length = 0; // Clear chunk
-          pipeline.resume(); // ✅ Resume stream after DB save
-        } catch (err) {
-          reject(err);
+          if (jupiterToken) {
+            const tags = jupiterToken.tags?.filter((item: string) => item !== "unknown") || [];
+
+            const info = {
+              ...dbTokenInfo,
+              coingecko_id: geckoToken.id,
+              coingecko_verified: true,
+              jupiter_verified: true,
+              minted_at: null,
+              token_program: jupiterToken.tokenProgram || null
+            };
+
+            const tokenData = {
+              data: {
+                address: mintAddress.trim(),
+                name: jupiterToken.name,
+                symbol: jupiterToken.symbol.toUpperCase(),
+                platform_id: SOLANA,
+                tags,
+                info: info as unknown as Prisma.JsonObject,
+                created_at: new Date(jupiterToken?.createdAt?.toString() || jupiterToken?.firstPool?.createdAt || new Date()),
+                updated_at: new Date(jupiterToken?.updatedAt?.toString() || new Date()),
+                deleted_at: null
+              }
+            };
+            prismaPromises.push(prisma.token.create(tokenData));
+            count++;
+            console.log(`PUSHED TOKEN TO PROMISE ARRAY: ${mintAddress}`);
+
+            await sleep(1000);
+          }
         }
       }
-    });
 
-    pipeline.on("end", async () => {
-      console.log(`✅ STREAM FINISHED: ${totalCount}`);
-      await fs.unlink(FILE_PATH);
-      console.log(`🗑️ Deleted file: ${FILE_PATH}`);
-      resolve();
-    });
+      if (count === MAX_COUNT) {
+        console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+        await Promise.all(prismaPromises);
+        count = 0;
+        prismaPromises = [];
+      }
+    }
 
-    pipeline.on("error", (err: any) => {
-      console.error("❌ Stream error:", err);
-      reject(err);
-    });
-  });
+    if (prismaPromises.length) {
+      console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+      await Promise.all(prismaPromises);
+    }
+
+    console.log("----------- SAVED TOKENS FROM COINGECKO ----------- \n\n");
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const fetchAndSaveStableCoins = async () => {
+  console.log("FETCHING STABLE COINS FROM COINGECKO ...");
+  const stablecoins = await geckoService.fetchAllStableCoins();
+  console.log(`TOTAL STABLE COINS ON COINGECKO: ${stablecoins.length} \n`);
+
+  try {
+    let count = 0;
+    let prismaPromises: PrismaPromise<any>[] = [];
+
+    for (let index = 0; index < stablecoins.length; index++) {
+      const stablecoin = stablecoins[index];
+      const geckoToken = await geckoService.fetchTokenById(stablecoin.id);
+      const mintAddress = geckoToken?.platforms.solana || null;
+
+      if (geckoToken && mintAddress) {
+        const dbToken = await tokenService.findByAddress(mintAddress);
+        const dbTokenInfo = (dbToken?.info as unknown as TokenExtendedInfo) || {};
+
+        if (!dbToken) {
+          let jupiterToken = null;
+
+          try {
+            jupiterToken = await jupiterService.fetchTokenByMint(mintAddress);
+          } catch (error) {
+            const formattedError = error as unknown as HttpError;
+            if (formattedError.status === HTTP_STATUS_404) continue;
+          }
+
+          if (jupiterToken) {
+            const tags = jupiterToken.tags?.filter((item: string) => item !== "unknown") || [];
+
+            const info = {
+              ...dbTokenInfo,
+              coingecko_id: geckoToken.id,
+              coingecko_verified: true,
+              jupiter_verified: true,
+              minted_at: null,
+              token_program: jupiterToken.tokenProgram || null
+            };
+
+            const tokenData = {
+              data: {
+                address: mintAddress.trim(),
+                name: jupiterToken.name,
+                symbol: jupiterToken.symbol.toUpperCase(),
+                platform_id: SOLANA,
+                tags,
+                info: info as unknown as Prisma.JsonObject,
+                created_at: new Date(jupiterToken?.createdAt?.toString() || jupiterToken?.firstPool?.createdAt || new Date()),
+                updated_at: new Date(jupiterToken?.updatedAt?.toString() || new Date()),
+                deleted_at: null
+              }
+            };
+            prismaPromises.push(prisma.token.create(tokenData));
+            count++;
+            console.log(`PUSHED TOKEN TO PROMISE ARRAY: ${mintAddress}`);
+
+            await sleep(1000);
+          }
+        } else {
+          let jupiterToken = null;
+
+          try {
+            jupiterToken = await jupiterService.fetchTokenByMint(mintAddress);
+          } catch (error) {
+            const formattedError = error as unknown as HttpError;
+            if (formattedError.status === HTTP_STATUS_404) continue;
+          }
+
+          if (jupiterToken) {
+            const info = {
+              ...dbTokenInfo,
+              coingecko_id: geckoToken.id,
+              coingecko_verified: true,
+              jupiter_verified: true,
+              minted_at: null,
+              token_program: jupiterToken.tokenProgram || null
+            };
+
+            const tags = jupiterToken.tags?.filter((item: string) => item !== "unknown") || [];
+            tags.push(STABLE_COIN);
+
+            prismaPromises.push(
+              prisma.token.update({
+                where: { id: dbToken.id },
+                data: {
+                  tags,
+                  info
+                }
+              })
+            );
+            count++;
+            console.log(`PUSHED TOKEN TO PROMISE ARRAY: ${mintAddress}`);
+
+            await sleep(1000);
+          }
+        }
+
+        if (count === MAX_COUNT) {
+          console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+          await Promise.all(prismaPromises);
+          count = 0;
+          prismaPromises = [];
+        }
+      }
+
+      await sleep(2000);
+    }
+
+    if (prismaPromises.length) {
+      console.log(`---------- SAVING ${prismaPromises.length} TOKENS TO DATABASE ----------`);
+      await Promise.all(prismaPromises);
+    }
+
+    console.log("----------- SAVED STABLE COINS FROM COINGECKO ----------- \n\n");
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 (async () => {
+  console.log("CRON TASKS STARTED ...\n");
   Solana.init();
-  // await fetchAndSavePlatforms();
-  await fetchAndSaveTokens();
+  await fetchAndSaveJupiterTokens();
+  await fetchAndSaveCoinGeckoTokens();
+  await fetchAndSaveStableCoins();
   console.log("CRON TASKS COMPLETED ...\n");
 })();

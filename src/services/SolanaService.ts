@@ -10,17 +10,16 @@ import {
   calculateTransactions24h,
   fixDecimals,
   getEmptyRiskAnalysisParams,
+  HTTP_STATUS_404,
   HttpError,
   isBase58Encoded,
-  makeRequest,
-  sleep,
   Solana,
   STABLE_COIN
 } from "../utils";
 import { GeckoService } from "./GeckoService";
 import { TokenService } from "./TokenService";
 import { GeckoTerminalService } from "./GeckoTerminalService";
-import { TokenAccountInfo, SPLToken, OnchainSupply, RiskAnalysisParams } from "types";
+import { TokenAccountInfo, OnchainSupply, RiskAnalysisParams } from "types";
 import { UseCache } from "@tsed/platform-cache";
 import { PublicKey, TransactionSignature, ParsedTransactionWithMeta } from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
@@ -29,7 +28,7 @@ import { JupiterService } from "./JupiterService";
 
 @Injectable()
 export class SolanaService {
-  public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
+  // public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
   private ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
   private ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
   private ACCOUNT_SIZE = 165; // Size of a standard Token Account
@@ -67,20 +66,6 @@ export class SolanaService {
       this.PUMP_FUN_PROGRAM_ID
     );
     return bondingCurvePDA;
-  }
-
-  public async fetchSPLStableCoins() {
-    const { data } = await makeRequest({ url: this.SPLTokensURL, method: "GET" });
-    const stableTagged = data.tokens.filter((token: SPLToken) => (token.tags || []).includes("stablecoin"));
-
-    const verified: any[] = [];
-    for (const token of stableTagged) {
-      const id = token.extensions?.coingeckoId;
-      if (!id) continue;
-      if (await this.geckoService.isStableCoin(token.address)) verified.push(token);
-      await sleep(2500);
-    }
-    return verified;
   }
 
   public async isMetadataImmutable(mintAddress: string): Promise<boolean> {
@@ -144,7 +129,7 @@ export class SolanaService {
       console.log(`[ERROR] Executing - ${this.constructor.name} fetchAccountInfo for ${mintAddress}`);
       console.log(error);
       const formattedError = error as unknown as HttpError;
-      if (formattedError.status === 404) return null;
+      if (formattedError.status === HTTP_STATUS_404) return null;
       throw new HttpError(formattedError.message, formattedError.status);
     }
   }
@@ -266,7 +251,7 @@ export class SolanaService {
       console.log(`[ERROR] Executing - ${this.constructor.name} fetchTokenSupply for ${mintAddress}`);
       console.log(error);
       const formattedError = error as unknown as HttpError;
-      if (formattedError.status === 404) return null;
+      if (formattedError.status === HTTP_STATUS_404) return null;
       throw new HttpError(formattedError.message, formattedError.status);
     }
   }
@@ -323,7 +308,7 @@ export class SolanaService {
       console.log(`[ERROR] Executing - ${this.constructor.name} getFirstTokenActivity for ${mintAddress}`);
       console.log(error);
       const formattedError = error as unknown as HttpError;
-      if (formattedError.status === 404) return null;
+      if (formattedError.status === HTTP_STATUS_404) return null;
       throw new HttpError(formattedError.message, formattedError.status);
     }
   }
@@ -344,6 +329,7 @@ export class SolanaService {
     let networksCount = 0;
     let verifiedOnCoingecko = false;
     let verifiedOnCoingeckoTerminal = false;
+    let verifiedOnJupiter = tokenInfo.jupiter_verified;
     let top10HolderSupplyPercentage = 0;
     let top20HolderSupplyPercentage = 0;
     let freezeAuthority = onchainMetadata?.data.freezeAuthority || null;
@@ -353,10 +339,13 @@ export class SolanaService {
     if (geckoTerminalTokenInfo && geckoTerminalTradeData) {
       verifiedOnCoingeckoTerminal = true;
       try {
-        const geckoToken = await this.geckoService.fetchToken(mintAddress);
+        const geckoToken = await this.geckoService.fetchTokenByMint(mintAddress);
         if (geckoToken) {
           circulatingSupply = geckoToken.circulating_supply;
           networksCount = Object.keys(geckoToken.platforms).length || 1;
+          top10HolderSupplyPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
+          top20HolderSupplyPercentage =
+            top10HolderSupplyPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["11_20"]);
           verifiedOnCoingecko = true;
         }
       } catch (error) {
@@ -365,13 +354,12 @@ export class SolanaService {
         circulatingSupply = onchainSupplyData?.circulatingSupply!;
         totalSupply = onchainSupplyData?.totalSupply!;
         totalHolders = onchainSupplyData?.totalHoldersCount!;
+        top10HolderSupplyPercentage = onchainSupplyData?.top10HoldersSupplyPercentage || 0;
+        top20HolderSupplyPercentage = onchainSupplyData?.top20HoldersSupplyPercentage || 0;
       }
 
       totalSupply = +geckoTerminalTradeData.data.attributes.normalized_total_supply;
       totalHolders = geckoTerminalTokenInfo.attributes.holders.count;
-      top10HolderSupplyPercentage = Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage.top_10);
-      top20HolderSupplyPercentage =
-        top10HolderSupplyPercentage + Number(geckoTerminalTokenInfo?.attributes.holders.distribution_percentage["11_20"]);
 
       const txCount24h = calculateTransactions24h(geckoTerminalTradeData);
 
@@ -391,6 +379,7 @@ export class SolanaService {
         networksCount,
         verifiedOnCoingecko,
         verifiedOnCoingeckoTerminal,
+        verifiedOnJupiter,
         whaleAccountsAvailable: top20HolderSupplyPercentage > 20,
         volume24h: geckoTerminalTradeData?.data.attributes.volume_usd.h24
           ? Number(geckoTerminalTradeData?.data.attributes.volume_usd.h24)
@@ -431,7 +420,7 @@ export class SolanaService {
         symbol: token.symbol,
         address: token.address,
         decimals: onchainMetadata?.data.decimals || 0,
-        imageUrl: token.logo_uri,
+        imageUrl: geckoTerminalTradeData?.data.attributes.image_url || geckoTerminalTokenInfo?.attributes.image.thumb || "",
         tags: [...token.tags, ...(token.tags.includes(STABLE_COIN) ? [STABLE_COIN] : [])],
         circulatingSupply: onchainSupplyData?.circulatingSupply || 0,
         totalSupply: onchainSupplyData?.totalSupply || 0,
@@ -446,6 +435,7 @@ export class SolanaService {
         networksCount,
         verifiedOnCoingecko,
         verifiedOnCoingeckoTerminal,
+        verifiedOnJupiter,
         freezeAuthorityAvailable: Boolean(freezeAuthority),
         mintAuthority,
         mintAuthorityAvailable: Boolean(mintAuthority),

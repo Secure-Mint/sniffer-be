@@ -27,66 +27,70 @@ const NUMBERS = {
   FIVE_HUNDRED: 500,
   HUNDRED: 100,
   TWENTY_FIVE: 25,
+  TWENTY: 20,
   TEN: 10,
   FIVE: 5,
+  FOUR: 4,
+  THREE: 3,
+  TWO: 2,
   ONE: 1,
   FIFTY_PERCENT: 0.5,
   TWENTY_FIVE_PERCCENT: 0.25
 };
 
 // verification
-const NOT_VERIFIED_COINGECKO = 5;
-const NOT_VERIFIED_GECKOTERMINAL = 3;
+const NOT_VERIFIED_COINGECKO = NUMBERS.FIVE;
+const NOT_VERIFIED_GECKOTERMINAL = NUMBERS.THREE;
 
 const VOLUME_PENALTY_LOW = 8;
-const VOLUME_PENALTY_MID = 5;
-const VOLUME_PENALTY_HIGH = 3;
+const VOLUME_PENALTY_MID = NUMBERS.FIVE;
+const VOLUME_PENALTY_HIGH = NUMBERS.THREE;
 
-const STABLE_COIN_SCORE = 90;
-const MAX_CONCENTRATION_PENALTY = 20;
+const STABLE_COIN_BONUS = NUMBERS.TEN;
+const MAX_CONCENTRATION_PENALTY = NUMBERS.TWENTY;
 
 // --- Verification Penalties ---
-const NOT_VERIFIED_COINGECKO_PENALTY = 10;
+const NOT_VERIFIED_COINGECKO_PENALTY = NUMBERS.TEN;
 const NOT_VERIFIED_GECKOTERMINAL_PENALTY = 8;
-const SOCIALS_MISSING_PENALTY = 5;
-const METADATA_NOT_VERIFIED_PENALTY = 5;
+const SOCIALS_MISSING_PENALTY = NUMBERS.FIVE;
+const METADATA_NOT_VERIFIED_PENALTY = NUMBERS.FIVE;
 
 // --- Authorities & Metadata ---
-const MINT_AUTHORITY_PENALTY = 10;
-const FREEZE_AUTHORITY_PENALTY = 10;
-const NON_IMMUTABLE_METADATA_PENALTY = 5;
-const METADATA_NOT_IMMUTABLE_PENALTY = 5;
+const MINT_AUTHORITY_PENALTY = NUMBERS.TEN;
+const FREEZE_AUTHORITY_PENALTY = NUMBERS.TEN;
+const NON_IMMUTABLE_METADATA_PENALTY = NUMBERS.FIVE;
+const METADATA_NOT_IMMUTABLE_PENALTY = NUMBERS.FIVE;
 
 // --- Concentration / Impersonation ---
-const IMPERSONATOR_PENALTY = 25;
+const IMPERSONATOR_PENALTY = NUMBERS.TWENTY_FIVE;
 
 // --- Activity ---
-const NO_RECENT_ACTIVITY_PENALTY = 10;
-const NO_ACTIVITY_24H_PENALTY = 10;
-const BUYER_SELLER_IMBALANCE = 4;
+const NO_RECENT_ACTIVITY_PENALTY = NUMBERS.TEN;
+const NO_ACTIVITY_24H_PENALTY = NUMBERS.TEN;
+const BUYER_SELLER_IMBALANCE = NUMBERS.FOUR;
 
 // --- Symbol Collisions ---
-const SYMBOL_COLLISION_PENALTY = 5;
+const SYMBOL_COLLISION_PENALTY = NUMBERS.FIVE;
 
 // --- DEX / Networks ---
-const DEX_LOW = 4;
-const NETWORK_LOW = 3;
+const DEX_LOW = NUMBERS.FOUR;
+const NETWORK_LOW = NUMBERS.THREE;
 
 // --- Social ---
-const SOCIAL_NONE = 10;
-const SOCIAL_FEW = 4;
+const SOCIAL_NONE = NUMBERS.TEN;
+const SOCIAL_FEW = NUMBERS.FOUR;
 
 // --- Supply ---
 const SUPPLY_PENALTY_HIGH = 8;
-const SUPPLY_PENALTY_MODERATE = 4;
+const SUPPLY_PENALTY_MODERATE = NUMBERS.FOUR;
 
-const NETWORKS_LOW_PENALTY = 5;
-const NETWORKS_HIGH_BONUS = 3;
-const NETWORK_HIGH_BONUS = 2;
+const NETWORKS_LOW_PENALTY = NUMBERS.FIVE;
+const NETWORKS_HIGH_BONUS = NUMBERS.THREE;
+const NETWORK_HIGH_BONUS = NUMBERS.TWO;
 
-const DEX_HIGH_BONUS = 3;
+const DEX_HIGH_BONUS = NUMBERS.THREE;
 
-const SOCIAL_STRONG_BONUS = 3;
+const SOCIAL_STRONG_BONUS = NUMBERS.THREE;
 
 const VOLUME_BONUS = {
   NORMAL: 1,
@@ -189,6 +193,9 @@ export const getEmptyRiskAnalysisParams = (): RiskAnalysisParams => ({
   totalTransfers: 0,
   recentActivity: false,
 
+  isHoneyPot: false,
+  isRugPull: false,
+
   twitter: null,
   websites: [],
   telegram: null,
@@ -204,9 +211,11 @@ export const calculateTokenAgeDays = (firstOnchainActivity: string): number => {
   return Math.floor((now - created) / (1000 * 60 * 60 * 24));
 };
 
+/**
+ * TO-DO: Need to add check to detect honeyPot and RugPull using RPC and pool addresses
+ */
 export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalScore: number; score: number; risk: RISK_STATUS } => {
   let score = MAX_SCORE;
-
   const {
     totalHolders,
     circulatingSupply,
@@ -217,7 +226,7 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
     mintAuthorityAvailable,
     immutableMetadata,
     verifiedOnCoingecko,
-    verifiedOnCoingeckoTerminal,
+    verifiedOnJupiter,
     liquidityUSD,
     marketCap,
     dailyVolume,
@@ -243,20 +252,22 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   // ---------------------------------------------------------------------
   // 0. Stablecoins (auto strong score)
   // ---------------------------------------------------------------------
-  if (isStableCoin) {
-    return {
-      totalScore: MAX_SCORE,
-      score: STABLE_COIN_SCORE,
-      risk: getRiskStatus(STABLE_COIN_SCORE)
-    };
-  }
+  // if (isStableCoin) {
+  //   return {
+  //     totalScore: MAX_SCORE,
+  //     score: STABLE_COIN_SCORE,
+  //     risk: getRiskStatus(STABLE_COIN_SCORE)
+  //   };
+  // }
 
   // ---------------------------------------------------------------------
   // 1. Holder Concentration
   // ---------------------------------------------------------------------
   let concentrationPenalty = 0;
-  if (top10HolderSupplyPercentage > 15) concentrationPenalty += (top10HolderSupplyPercentage - 20) * 0.5;
-  if (top20HolderSupplyPercentage > 40) concentrationPenalty += (top20HolderSupplyPercentage - 40) * 0.25;
+  if (!top10HolderSupplyPercentage || top10HolderSupplyPercentage > 15)
+    concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * 0.5;
+  if (!top20HolderSupplyPercentage || top20HolderSupplyPercentage > 40)
+    concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * 0.25;
   score -= Math.min(concentrationPenalty, MAX_CONCENTRATION_PENALTY);
 
   if (whaleAccountsAvailable) score += 5;
@@ -267,7 +278,7 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   if (!verifiedOnCoingecko) score -= NOT_VERIFIED_COINGECKO_PENALTY;
   else score += NOT_VERIFIED_COINGECKO * NUMBERS.TWENTY_FIVE_PERCCENT;
 
-  if (!verifiedOnCoingeckoTerminal) score -= NOT_VERIFIED_GECKOTERMINAL_PENALTY;
+  if (!verifiedOnJupiter) score -= NOT_VERIFIED_GECKOTERMINAL_PENALTY;
   else score += NOT_VERIFIED_GECKOTERMINAL * NUMBERS.TWENTY_FIVE_PERCCENT;
 
   if (!socialsVerified) score -= SOCIALS_MISSING_PENALTY;
@@ -276,8 +287,8 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   // ---------------------------------------------------------------------
   // 3. Authorities & Metadata
   // ---------------------------------------------------------------------
-  if (mintAuthorityAvailable) score -= MINT_AUTHORITY_PENALTY;
-  if (freezeAuthorityAvailable) score -= FREEZE_AUTHORITY_PENALTY;
+  if (!isStableCoin && mintAuthorityAvailable) score -= MINT_AUTHORITY_PENALTY;
+  if (!isStableCoin && freezeAuthorityAvailable) score -= FREEZE_AUTHORITY_PENALTY;
   if (!immutableMetadata) score -= METADATA_NOT_IMMUTABLE_PENALTY;
 
   // ---------------------------------------------------------------------
@@ -319,12 +330,14 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   // ---------------------------------------------------------------------
   // 8. Volume Bonuses / Penalties (scaled)
   // ---------------------------------------------------------------------
-  if (dailyVolume < NUMBERS.TWO_THOUSAND) score -= VOLUME_PENALTY_LOW;
-  else if (dailyVolume < NUMBERS.TEN_THOUSAND) score -= VOLUME_PENALTY_MID;
-  else if (dailyVolume < NUMBERS.FIFTY_THOUSAND) score -= VOLUME_PENALTY_HIGH;
-  else if (dailyVolume > NUMBERS.FIVE_HUNDRED_THOUSAND) score += VOLUME_BONUS.HIGH;
-  else if (dailyVolume > NUMBERS.TWO_FIFTY_THOUSAND) score += VOLUME_BONUS.STRONG;
-  else if (dailyVolume > NUMBERS.HUNDRED_THOUSAND) score += VOLUME_BONUS.NORMAL;
+  if (!isStableCoin) {
+    if (dailyVolume < NUMBERS.TWO_THOUSAND) score -= VOLUME_PENALTY_LOW;
+    else if (dailyVolume < NUMBERS.TEN_THOUSAND) score -= VOLUME_PENALTY_MID;
+    else if (dailyVolume < NUMBERS.FIFTY_THOUSAND) score -= VOLUME_PENALTY_HIGH;
+    else if (dailyVolume > NUMBERS.FIVE_HUNDRED_THOUSAND) score += VOLUME_BONUS.HIGH;
+    else if (dailyVolume > NUMBERS.TWO_FIFTY_THOUSAND) score += VOLUME_BONUS.STRONG;
+    else if (dailyVolume > NUMBERS.HUNDRED_THOUSAND) score += VOLUME_BONUS.NORMAL;
+  }
 
   // ---------------------------------------------------------------------
   // 9. Activity
@@ -364,8 +377,11 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   // ---------------------------------------------------------------------
   // 13. Networks & DEX
   // ---------------------------------------------------------------------
-  if (networksCount <= 1) score -= NETWORK_LOW;
-  else if (networksCount >= 3) score += NETWORK_HIGH_BONUS;
+
+  if (!isStableCoin) {
+    if (networksCount <= 1) score -= NETWORK_LOW;
+    else if (networksCount >= 3) score += NETWORK_HIGH_BONUS;
+  }
 
   if (dexCount <= 1) score -= DEX_LOW;
   else if (dexCount >= 5) score += DEX_HIGH_BONUS;
@@ -378,7 +394,7 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   else if (socialCount === 1) score -= SOCIAL_FEW;
   else if (socialCount >= 3) score += SOCIAL_STRONG_BONUS;
 
-  console.log("raw score", score);
+  if (isStableCoin && score <= 70) score += STABLE_COIN_BONUS;
 
   // ---------------------------------------------------------------------
   // 15. Clamp final score
@@ -405,8 +421,9 @@ export const calculateLightRiskScore = (
     circulatingSupply,
     totalSupply,
     totalHolders,
-    top10HolderSupplyPercentage: t10,
-    top20HolderSupplyPercentage: t20,
+    top10HolderSupplyPercentage,
+    top20HolderSupplyPercentage,
+    whaleAccountsAvailable,
 
     networksCount,
     verifiedOnCoingecko,
@@ -428,20 +445,14 @@ export const calculateLightRiskScore = (
   // === 1. Holders Concentration ========================================
   // =====================================================================
 
-  const equalPercentagePerHolder = totalHolders > 0 ? 100 / totalHolders : 100;
-
   let concentrationPenalty = 0;
+  if (!top10HolderSupplyPercentage || top10HolderSupplyPercentage > 15)
+    concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * 0.5;
+  if (!top20HolderSupplyPercentage || top20HolderSupplyPercentage > 40)
+    concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * 0.25;
+  score -= Math.min(concentrationPenalty, MAX_CONCENTRATION_PENALTY);
 
-  if (t10 > equalPercentagePerHolder * 10) {
-    concentrationPenalty += (t10 - equalPercentagePerHolder * 10) * 0.6;
-  }
-
-  if (t20 > equalPercentagePerHolder * 20) {
-    concentrationPenalty += (t20 - equalPercentagePerHolder * 20) * 0.35;
-  }
-
-  concentrationPenalty = Math.min(MAX_CONCENTRATION_PENALTY, concentrationPenalty);
-  score -= concentrationPenalty;
+  if (whaleAccountsAvailable) score += 5;
 
   // =====================================================================
   // === 2. Authorities & Metadata =======================================

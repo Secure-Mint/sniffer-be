@@ -35,7 +35,7 @@ export type Token = $Result.DefaultSelection<Prisma.$TokenPayload>
  */
 export class PrismaClient<
   ClientOptions extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
-  U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
+  const U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
   ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs
 > {
   [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
@@ -67,13 +67,6 @@ export class PrismaClient<
    * Disconnect from the database
    */
   $disconnect(): $Utils.JsPromise<void>;
-
-  /**
-   * Add a middleware
-   * @deprecated since 4.16.0. For new code, prefer client extensions instead.
-   * @see https://pris.ly/d/extensions
-   */
-  $use(cb: Prisma.Middleware): void
 
 /**
    * Executes a prepared raw query and returns the number of affected rows.
@@ -211,8 +204,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.7.0
-   * Query Engine version: 3cff47a7f5d65c3ea74883f1d736e41d68ce91ed
+   * Prisma Client JS version: 6.19.0
+   * Query Engine version: 2ba551f319ab1df4bc874a89965d8b3641056773
    */
   export type PrismaVersion = {
     client: string
@@ -225,6 +218,7 @@ export namespace Prisma {
    */
 
 
+  export import Bytes = runtime.Bytes
   export import JsonObject = runtime.JsonObject
   export import JsonArray = runtime.JsonArray
   export import JsonValue = runtime.JsonValue
@@ -733,16 +727,24 @@ export namespace Prisma {
     /**
      * @example
      * ```
-     * // Defaults to stdout
+     * // Shorthand for `emit: 'stdout'`
      * log: ['query', 'info', 'warn', 'error']
      * 
-     * // Emit as events
+     * // Emit as events only
      * log: [
-     *   { emit: 'stdout', level: 'query' },
-     *   { emit: 'stdout', level: 'info' },
-     *   { emit: 'stdout', level: 'warn' }
-     *   { emit: 'stdout', level: 'error' }
+     *   { emit: 'event', level: 'query' },
+     *   { emit: 'event', level: 'info' },
+     *   { emit: 'event', level: 'warn' }
+     *   { emit: 'event', level: 'error' }
      * ]
+     * 
+     * / Emit as events and log to stdout
+     * og: [
+     *  { emit: 'stdout', level: 'query' },
+     *  { emit: 'stdout', level: 'info' },
+     *  { emit: 'stdout', level: 'warn' }
+     *  { emit: 'stdout', level: 'error' }
+     * 
      * ```
      * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/logging#the-log-option).
      */
@@ -757,6 +759,10 @@ export namespace Prisma {
       timeout?: number
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
+    /**
+     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
+     */
+    adapter?: runtime.SqlDriverAdapterFactory | null
     /**
      * Global configuration for omitting model fields by default.
      * 
@@ -784,10 +790,15 @@ export namespace Prisma {
     emit: 'stdout' | 'event'
   }
 
-  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition ? T['emit'] extends 'event' ? T['level'] : never : never
-  export type GetEvents<T extends any> = T extends Array<LogLevel | LogDefinition> ?
-    GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
-    : never
+  export type CheckIsLogLevel<T> = T extends LogLevel ? T : never;
+
+  export type GetLogType<T> = CheckIsLogLevel<
+    T extends LogDefinition ? T['level'] : T
+  >;
+
+  export type GetEvents<T extends any[]> = T extends Array<LogLevel | LogDefinition>
+    ? GetLogType<T[number]>
+    : never;
 
   export type QueryEvent = {
     timestamp: Date
@@ -828,25 +839,6 @@ export namespace Prisma {
     | 'findRaw'
     | 'groupBy'
 
-  /**
-   * These options are being passed into the middleware as "params"
-   */
-  export type MiddlewareParams = {
-    model?: ModelName
-    action: PrismaAction
-    args: any
-    dataPath: string[]
-    runInTransaction: boolean
-  }
-
-  /**
-   * The `T` type makes sure, that the `return proceed` is not forgotten in the middleware implementation
-   */
-  export type Middleware<T = any> = (
-    params: MiddlewareParams,
-    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
-  ) => $Utils.JsPromise<T>
-
   // tested in getLogLevel.test.ts
   export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
 
@@ -882,7 +874,6 @@ export namespace Prisma {
   export type TokenMinAggregateOutputType = {
     id: string | null
     address: string | null
-    logo_uri: string | null
     name: string | null
     symbol: string | null
     created_at: Date | null
@@ -894,7 +885,6 @@ export namespace Prisma {
   export type TokenMaxAggregateOutputType = {
     id: string | null
     address: string | null
-    logo_uri: string | null
     name: string | null
     symbol: string | null
     created_at: Date | null
@@ -906,7 +896,6 @@ export namespace Prisma {
   export type TokenCountAggregateOutputType = {
     id: number
     address: number
-    logo_uri: number
     name: number
     symbol: number
     tags: number
@@ -923,7 +912,6 @@ export namespace Prisma {
   export type TokenMinAggregateInputType = {
     id?: true
     address?: true
-    logo_uri?: true
     name?: true
     symbol?: true
     created_at?: true
@@ -935,7 +923,6 @@ export namespace Prisma {
   export type TokenMaxAggregateInputType = {
     id?: true
     address?: true
-    logo_uri?: true
     name?: true
     symbol?: true
     created_at?: true
@@ -947,7 +934,6 @@ export namespace Prisma {
   export type TokenCountAggregateInputType = {
     id?: true
     address?: true
-    logo_uri?: true
     name?: true
     symbol?: true
     tags?: true
@@ -1035,7 +1021,6 @@ export namespace Prisma {
   export type TokenGroupByOutputType = {
     id: string
     address: string
-    logo_uri: string | null
     name: string
     symbol: string
     tags: string[]
@@ -1067,7 +1052,6 @@ export namespace Prisma {
   export type TokenSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    logo_uri?: boolean
     name?: boolean
     symbol?: boolean
     tags?: boolean
@@ -1082,7 +1066,6 @@ export namespace Prisma {
   export type TokenSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    logo_uri?: boolean
     name?: boolean
     symbol?: boolean
     tags?: boolean
@@ -1097,7 +1080,6 @@ export namespace Prisma {
   export type TokenSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     address?: boolean
-    logo_uri?: boolean
     name?: boolean
     symbol?: boolean
     tags?: boolean
@@ -1112,7 +1094,6 @@ export namespace Prisma {
   export type TokenSelectScalar = {
     id?: boolean
     address?: boolean
-    logo_uri?: boolean
     name?: boolean
     symbol?: boolean
     tags?: boolean
@@ -1124,7 +1105,7 @@ export namespace Prisma {
     platform_id?: boolean
   }
 
-  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "logo_uri" | "name" | "symbol" | "tags" | "metadata" | "info" | "created_at" | "updated_at" | "deleted_at" | "platform_id", ExtArgs["result"]["token"]>
+  export type TokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "address" | "name" | "symbol" | "tags" | "metadata" | "info" | "created_at" | "updated_at" | "deleted_at" | "platform_id", ExtArgs["result"]["token"]>
 
   export type $TokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Token"
@@ -1132,7 +1113,6 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       address: string
-      logo_uri: string | null
       name: string
       symbol: string
       tags: string[]
@@ -1567,7 +1547,6 @@ export namespace Prisma {
   interface TokenFieldRefs {
     readonly id: FieldRef<"Token", 'String'>
     readonly address: FieldRef<"Token", 'String'>
-    readonly logo_uri: FieldRef<"Token", 'String'>
     readonly name: FieldRef<"Token", 'String'>
     readonly symbol: FieldRef<"Token", 'String'>
     readonly tags: FieldRef<"Token", 'String[]'>
@@ -1960,7 +1939,6 @@ export namespace Prisma {
   export const TokenScalarFieldEnum: {
     id: 'id',
     address: 'address',
-    logo_uri: 'logo_uri',
     name: 'name',
     symbol: 'symbol',
     tags: 'tags',
@@ -2085,7 +2063,6 @@ export namespace Prisma {
     NOT?: TokenWhereInput | TokenWhereInput[]
     id?: UuidFilter<"Token"> | string
     address?: StringFilter<"Token"> | string
-    logo_uri?: StringNullableFilter<"Token"> | string | null
     name?: StringFilter<"Token"> | string
     symbol?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
@@ -2100,7 +2077,6 @@ export namespace Prisma {
   export type TokenOrderByWithRelationInput = {
     id?: SortOrder
     address?: SortOrder
-    logo_uri?: SortOrderInput | SortOrder
     name?: SortOrder
     symbol?: SortOrder
     tags?: SortOrder
@@ -2118,7 +2094,6 @@ export namespace Prisma {
     AND?: TokenWhereInput | TokenWhereInput[]
     OR?: TokenWhereInput[]
     NOT?: TokenWhereInput | TokenWhereInput[]
-    logo_uri?: StringNullableFilter<"Token"> | string | null
     name?: StringFilter<"Token"> | string
     symbol?: StringFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
@@ -2133,7 +2108,6 @@ export namespace Prisma {
   export type TokenOrderByWithAggregationInput = {
     id?: SortOrder
     address?: SortOrder
-    logo_uri?: SortOrderInput | SortOrder
     name?: SortOrder
     symbol?: SortOrder
     tags?: SortOrder
@@ -2154,7 +2128,6 @@ export namespace Prisma {
     NOT?: TokenScalarWhereWithAggregatesInput | TokenScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"Token"> | string
     address?: StringWithAggregatesFilter<"Token"> | string
-    logo_uri?: StringNullableWithAggregatesFilter<"Token"> | string | null
     name?: StringWithAggregatesFilter<"Token"> | string
     symbol?: StringWithAggregatesFilter<"Token"> | string
     tags?: StringNullableListFilter<"Token">
@@ -2169,7 +2142,6 @@ export namespace Prisma {
   export type TokenCreateInput = {
     id?: string
     address: string
-    logo_uri?: string | null
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
@@ -2184,7 +2156,6 @@ export namespace Prisma {
   export type TokenUncheckedCreateInput = {
     id?: string
     address: string
-    logo_uri?: string | null
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
@@ -2199,7 +2170,6 @@ export namespace Prisma {
   export type TokenUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
@@ -2214,7 +2184,6 @@ export namespace Prisma {
   export type TokenUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
@@ -2229,7 +2198,6 @@ export namespace Prisma {
   export type TokenCreateManyInput = {
     id?: string
     address: string
-    logo_uri?: string | null
     name: string
     symbol: string
     tags?: TokenCreatetagsInput | string[]
@@ -2244,7 +2212,6 @@ export namespace Prisma {
   export type TokenUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
@@ -2259,7 +2226,6 @@ export namespace Prisma {
   export type TokenUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     address?: StringFieldUpdateOperationsInput | string
-    logo_uri?: NullableStringFieldUpdateOperationsInput | string | null
     name?: StringFieldUpdateOperationsInput | string
     symbol?: StringFieldUpdateOperationsInput | string
     tags?: TokenUpdatetagsInput | string[]
@@ -2296,21 +2262,6 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringFilter<$PrismaModel> | string
-  }
-
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type StringNullableListFilter<$PrismaModel = never> = {
@@ -2374,7 +2325,6 @@ export namespace Prisma {
   export type TokenCountOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    logo_uri?: SortOrder
     name?: SortOrder
     symbol?: SortOrder
     tags?: SortOrder
@@ -2389,7 +2339,6 @@ export namespace Prisma {
   export type TokenMaxOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    logo_uri?: SortOrder
     name?: SortOrder
     symbol?: SortOrder
     created_at?: SortOrder
@@ -2401,7 +2350,6 @@ export namespace Prisma {
   export type TokenMinOrderByAggregateInput = {
     id?: SortOrder
     address?: SortOrder
-    logo_uri?: SortOrder
     name?: SortOrder
     symbol?: SortOrder
     created_at?: SortOrder
@@ -2441,24 +2389,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -2523,10 +2453,6 @@ export namespace Prisma {
     set?: string
   }
 
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
-  }
-
   export type TokenUpdatetagsInput = {
     set?: string[]
     push?: string | string[]
@@ -2563,20 +2489,6 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
-  }
-
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -2642,34 +2554,6 @@ export namespace Prisma {
     _min?: NestedStringFilter<$PrismaModel>
     _max?: NestedStringFilter<$PrismaModel>
   }
-
-  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
   export type NestedJsonFilter<$PrismaModel = never> =
     | PatchUndefined<
         Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
@@ -2720,6 +2604,17 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
 

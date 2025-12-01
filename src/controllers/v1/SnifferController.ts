@@ -25,24 +25,17 @@ export class SnifferController {
     const impersonator = Boolean(sameSymbolTokens.length > 1 && !tokenInfo.coingecko_verified);
 
     const isStableCoin = token.tags.includes(STABLE_COIN);
-    const haswhaleAccounts = true;
-    const isHoneyPot = true;
 
     const analysisParams = await this.solanaService.fetchTokenAnalysisParams(token);
-
-    console.log(analysisParams);
-
     const score = calculateRiskScore(analysisParams);
-
-    console.log(score);
 
     const snifferData: SnifferModel = {
       symbol: token.symbol,
-      imageUrl: token.logo_uri,
+      imageUrl: analysisParams.imageUrl,
       name: token.name,
       decimals: analysisParams.decimals || 0,
       address: token.address,
-      volume24h: fixDecimals(tokenInfo.daily_volume || 0, 2),
+      volume24h: fixDecimals(analysisParams.dailyVolume || 0, 2),
       circulatingSupply: analysisParams.circulatingSupply || 0,
       marketCap: analysisParams.marketCap,
       totalSupply: analysisParams?.totalSupply || 0,
@@ -51,9 +44,7 @@ export class SnifferController {
       top20HolderSupplyPercentage: fixDecimals(analysisParams?.top20HolderSupplyPercentage || 0, 2),
       tags: token.tags,
       impersonator,
-      haswhaleAccounts,
       isStableCoin,
-      isHoneyPot,
       freezeAuthority: analysisParams?.freezeAuthority || null,
       freezeAuthorityAvailable: Boolean(analysisParams?.freezeAuthority),
       mintAuthority: analysisParams.mintAuthority || null,

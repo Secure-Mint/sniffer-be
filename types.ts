@@ -1,45 +1,96 @@
 import { RISK_STATUS, YES_NO } from "./src/utils";
 
-export interface SPLToken {
-  chainId: number; // Should be 101 for Solana mainnet
-  address: string; // Mint address (base58, case-sensitive)
-  symbol: string;
-  name: string;
-  decimals: number;
-  logoURI?: string;
-  tags?: string[]; // e.g., ['stablecoin', 'usd-backed']
-  extensions?: {
-    website?: string;
-    bridgeContract?: string;
-    assetContract?: string;
-    address?: string;
-    twitter?: string;
-    github?: string;
-    medium?: string;
-    tgann?: string;
-    tggroup?: string;
-    discord?: string;
-    serumV3Usdc?: string;
-    serumV3Usdt?: string;
-    coingeckoId?: string;
-    [key: string]: any; // Extensions are open-ended
-  };
+// export interface SPLToken {
+//   chainId: number; // Should be 101 for Solana mainnet
+//   address: string; // Mint address (base58, case-sensitive)
+//   symbol: string;
+//   name: string;
+//   decimals: number;
+//   logoURI?: string;
+//   tags?: string[]; // e.g., ['stablecoin', 'usd-backed']
+//   extensions?: {
+//     website?: string;
+//     bridgeContract?: string;
+//     assetContract?: string;
+//     address?: string;
+//     twitter?: string;
+//     github?: string;
+//     medium?: string;
+//     tgann?: string;
+//     tggroup?: string;
+//     discord?: string;
+//     serumV3Usdc?: string;
+//     serumV3Usdt?: string;
+//     coingeckoId?: string;
+//     [key: string]: any; // Extensions are open-ended
+//   };
+// }
+
+// export interface JupiterToken {
+//   address: string;
+//   created_at: string;
+//   daily_volume: number | null;
+//   decimals: number;
+//   extensions: JSON;
+//   freeze_authority: string | null;
+//   logoURI: string | null;
+//   mint_authority: string | null;
+//   minted_at: string;
+//   name: string;
+//   permanent_delegate: string | null;
+//   symbol: string;
+//   tags: string[] | null;
+// }
+
+interface JupiterVerifiedTokenStats {
+  priceChange: number;
+  liquidityChange: number;
+  volumeChange: number;
+  buyVolume: number;
+  sellVolume: number;
+  buyOrganicVolume: number;
+  sellOrganicVolume: number;
+  numBuys: number;
+  numSells: number;
+  numTraders: number;
+  numOrganicBuyers: number;
+  numNetBuyers: number;
 }
 
-export interface JupiterToken {
-  address: string;
-  created_at: string;
-  daily_volume: number | null;
-  decimals: number;
-  extensions: JSON;
-  freeze_authority: string | null;
-  logoURI: string | null;
-  mint_authority: string | null;
-  minted_at: string;
+export interface JupiterVerifiedToken {
+  id: string;
   name: string;
-  permanent_delegate: string | null;
   symbol: string;
-  tags: string[] | null;
+  icon: string;
+  decimals: number;
+  circSupply: number;
+  totalSupply: number;
+  tokenProgram: string;
+  dev?: "3etKXcW2fzEJR5YXoSKSmP6UZ633g9uiFv5yuqFUf66k";
+  mintAuthority?: "4LjesTqRA8SLWph1zngxkNzmBaKuLMB5dAgdG3viwSy6";
+  firstPool: { id: string; createdAt: string };
+  holderCount: number;
+  audit?: { mintAuthorityDisabled: boolean; freezeAuthorityDisabled: boolean; topHoldersPercentage: number };
+  apy: { jupEarn: number };
+  organicScore: number;
+  organicScoreLabel: string;
+  isVerified: boolean;
+  tags: [string];
+  createdAt: string;
+  fdv?: number;
+  mcap?: number;
+  usdPrice?: number;
+  priceBlockId?: number;
+  liquidity: number;
+  stats5m?: JupiterVerifiedTokenStats;
+  stats1h?: JupiterVerifiedTokenStats;
+  stats6h?: JupiterVerifiedTokenStats;
+  stats24h?: JupiterVerifiedTokenStats;
+  stats7d?: { priceChange: number };
+  stats30d?: { priceChange: number };
+  ctLikes?: number;
+  smartCtLikes?: number;
+  updatedAt: string;
 }
 
 export interface CoingeckoSimpleToken {
@@ -47,6 +98,35 @@ export interface CoingeckoSimpleToken {
   symbol: string;
   name: string;
   platforms: Record<string, string>;
+}
+
+export interface CoingeckoMarketToken {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  market_cap_rank: 1;
+  fully_diluted_valuation: number;
+  total_volume: number;
+  high_24h: number;
+  low_24h: number;
+  price_change_24h: number;
+  price_change_percentage_24h: number;
+  market_cap_change_24h: number;
+  market_cap_change_percentage_24h: number;
+  circulating_supply: number;
+  total_supply: number;
+  max_supply: number;
+  ath: number;
+  ath_change_percentage: number;
+  ath_date: string;
+  atl: number;
+  atl_change_percentage: number;
+  atl_date: string;
+  roi: string;
+  last_updated: string;
 }
 
 export interface CoingeckoTokenData {
@@ -363,6 +443,9 @@ export interface RiskAnalysisParams {
   totalTransactions: number;
   totalTransfers: number;
   recentActivity: boolean;
+
+  isHoneyPot: boolean;
+  isRugPull: boolean;
 
   /* ========== SOCIAL / EXTERNAL SIGNALS ========== */
   twitter: string | null;

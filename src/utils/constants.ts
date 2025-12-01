@@ -1,10 +1,11 @@
 export const SOL = "SOL";
 export const SOLANA = "solana";
 export const STABLE_COIN = "stablecoin";
+export const GECK_STABLE_COIN_ID = "stablecoins";
 export const MEDIUM_RISK_THRESHOLD = 75;
 export const HIGH_RISK_THRESHOLD = 50;
-export const HOUR_SECONDS = 60 * 60;
-export const HOUR_24_SECONDS = 24 * 60 * 60;
+export const ONE_HOUR = 60 * 60 * 6;
+export const ONE_DAY = 24 * 60 * 60;
 
 export enum YES_NO {
   YES = "yes",
@@ -19,3 +20,6 @@ export enum RISK_STATUS {
   LOW_RISK = "LOW_RISK",
   VERY_LOW_RISK = "VERY_LOW_RISK"
 }
+
+// Http status codes
+export const HTTP_STATUS_404 = 404;

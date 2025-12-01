@@ -2,12 +2,11 @@ import { CollectionOf, Required } from "@tsed/schema";
 import { Token } from "generated/prisma";
 
 export class TokenExtendedInfo {
-  @Required() public readonly decimals: number;
-  @Required() public readonly daily_volume: number | null;
   @Required() public readonly minted_at: Date | null;
-  @Required() public readonly permanent_delegate: string | null;
   @Required() public readonly coingecko_id: string | null;
   @Required() public readonly coingecko_verified: boolean;
+  @Required() public readonly jupiter_verified: boolean;
+  @Required() public readonly token_program: string;
 }
 
 export class TokenModel {
@@ -15,7 +14,6 @@ export class TokenModel {
   @Required() public readonly address: string;
   @Required() public readonly info: TokenExtendedInfo;
   @Required() public readonly metadata: JSON;
-  @Required() public readonly logo_uri: string | null;
   @Required() public readonly name: string;
   @Required() public readonly symbol: string;
   @Required() public readonly platform_id: string;
