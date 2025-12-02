@@ -18,7 +18,8 @@ export enum RISK_STATUS {
   HIGH_RISK = "HIGH_RISK",
   MODERATE_RISK = "MODERATE_RISK",
   LOW_RISK = "LOW_RISK",
-  VERY_LOW_RISK = "VERY_LOW_RISK"
+  VERY_LOW_RISK = "VERY_LOW_RISK",
+  INFO = "INFO"
 }
 
 // Http status codes

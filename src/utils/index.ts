@@ -11,7 +11,7 @@ export * from "./errors";
 
 export const sleep = async (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const fixDecimals = (num: number, decimals: number): number => {
+export const fixDecimals = (num: number, decimals = 2): number => {
   const [int, frac = ""] = num.toFixed(decimals + 5).split(".");
   if (decimals <= 0) return Number(int);
 

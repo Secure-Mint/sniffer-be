@@ -42,6 +42,17 @@ export class TokenService {
     });
   }
 
+  public async findByGeckoId(id: string) {
+    return prisma.token.findFirst({
+      where: {
+        info: {
+          path: ["coingecko_id"],
+          equals: id
+        }
+      }
+    });
+  }
+
   public parsedInfo(token: Token) {
     return token.info as unknown as TokenExtendedInfo;
   }

@@ -1,4 +1,4 @@
-import { Prisma, PrismaPromise } from "generated/prisma";
+import { Prisma, PrismaPromise, Token } from "generated/prisma";
 import { HTTP_STATUS_404, HttpError, sleep, Solana, SOLANA, STABLE_COIN } from "../../utils";
 import { prisma } from "../../services/PrismaService";
 import { TokenService } from "../../services/TokenService";
@@ -154,6 +154,10 @@ const fetchAndSaveCoinGeckoTokens = async () => {
   }
 };
 
+/**
+ * TO-DO: Optimize this to use less coin gecko credits,
+ * Instead of calling the gecko api by id, first check the Database if that id is already saved in DB.
+ */
 const fetchAndSaveStableCoins = async () => {
   console.log("FETCHING STABLE COINS FROM COINGECKO ...");
   const stablecoins = await geckoService.fetchAllStableCoins();
@@ -165,11 +169,15 @@ const fetchAndSaveStableCoins = async () => {
 
     for (let index = 0; index < stablecoins.length; index++) {
       const stablecoin = stablecoins[index];
+
+      let dbToken = await tokenService.findByGeckoId(stablecoin.id);
+      if (dbToken) continue;
+
       const geckoToken = await geckoService.fetchTokenById(stablecoin.id);
       const mintAddress = geckoToken?.platforms.solana || null;
 
       if (geckoToken && mintAddress) {
-        const dbToken = await tokenService.findByAddress(mintAddress);
+        dbToken = await tokenService.findByAddress(mintAddress);
         const dbTokenInfo = (dbToken?.info as unknown as TokenExtendedInfo) || {};
 
         if (!dbToken) {
