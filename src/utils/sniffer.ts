@@ -1,133 +1,86 @@
 import { RiskAnalysisParams } from "types";
-import { RISK_STATUS } from "../utils/constants";
+import { NUMBERS, RISK_STATUS } from "../utils/constants";
 import { getRiskStatus } from ".";
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
-const NUMBERS = {
-  HUNDRED_MILLION: 100_000_000,
-  FIFTY_MILLION: 50_000_000,
-  TWENTY_MILLION: 20_000_000,
-  TEN_MILLION: 10_000_000,
-  FIVE_MILLION: 5_000_000,
-  TWO_MILLION: 2_000_000,
-  MILLION: 1_000_000,
-  FIVE_HUNDRED_THOUSAND: 500_000,
-  TWO_FIFTY_THOUSAND: 250_000,
-  TWO_HUNDRED_THOUSAND: 250_000,
-  HUNDRED_THOUSAND: 100_000,
-  FIFTY_THOUSAND: 50_000,
-  TWENTY_FIVE_THOUSAND: 25_000,
-  TWENTY_THOUSAND: 20_000,
-  FIFTEEN_THOUSAND: 15_000,
-  TEN_THOUSAND: 10_000,
-  FIVE_THOUSAND: 5_000,
-  TWO_THOUSAND: 2_000,
-  THOUSAND: 1_000,
-  FIVE_HUNDRED: 500,
-  HUNDRED: 100,
-  TWENTY_FIVE: 25,
-  TWENTY: 20,
-  TEN: 10,
-  FIVE: 5,
-  FOUR: 4,
-  THREE: 3,
-  TWO: 2,
-  ONE: 1,
-  FIFTY_PERCENT: 0.5,
-  TWENTY_FIVE_PERCCENT: 0.25
-};
-
-// verification
 const NOT_VERIFIED_COINGECKO = NUMBERS.FIVE;
 const NOT_VERIFIED_GECKOTERMINAL = NUMBERS.THREE;
-
-const VOLUME_PENALTY_LOW = 8;
+const VOLUME_PENALTY_LOW = NUMBERS.EIGHT;
 const VOLUME_PENALTY_MID = NUMBERS.FIVE;
 const VOLUME_PENALTY_HIGH = NUMBERS.THREE;
-
 const STABLE_COIN_BONUS = NUMBERS.TEN;
 const MAX_CONCENTRATION_PENALTY = NUMBERS.TWENTY;
-
-// --- Verification Penalties ---
 const NOT_VERIFIED_COINGECKO_PENALTY = NUMBERS.TEN;
-const NOT_VERIFIED_GECKOTERMINAL_PENALTY = 8;
+const NOT_VERIFIED_GECKOTERMINAL_PENALTY = NUMBERS.EIGHT;
 const SOCIALS_MISSING_PENALTY = NUMBERS.FIVE;
 const METADATA_NOT_VERIFIED_PENALTY = NUMBERS.FIVE;
-
-// --- Authorities & Metadata ---
 const MINT_AUTHORITY_PENALTY = NUMBERS.TEN;
 const FREEZE_AUTHORITY_PENALTY = NUMBERS.TEN;
 const NON_IMMUTABLE_METADATA_PENALTY = NUMBERS.FIVE;
 const METADATA_NOT_IMMUTABLE_PENALTY = NUMBERS.FIVE;
-
-// --- Concentration / Impersonation ---
 const IMPERSONATOR_PENALTY = NUMBERS.TWENTY_FIVE;
-
-// --- Activity ---
 const NO_RECENT_ACTIVITY_PENALTY = NUMBERS.TEN;
 const NO_ACTIVITY_24H_PENALTY = NUMBERS.TEN;
 const BUYER_SELLER_IMBALANCE = NUMBERS.FOUR;
-
-// --- Symbol Collisions ---
 const SYMBOL_COLLISION_PENALTY = NUMBERS.FIVE;
-
-// --- DEX / Networks ---
 const DEX_LOW = NUMBERS.FOUR;
 const NETWORK_LOW = NUMBERS.THREE;
-
-// --- Social ---
 const SOCIAL_NONE = NUMBERS.TEN;
 const SOCIAL_FEW = NUMBERS.FOUR;
-
-// --- Supply ---
-const SUPPLY_PENALTY_HIGH = 8;
+const SUPPLY_PENALTY_HIGH = NUMBERS.EIGHT;
 const SUPPLY_PENALTY_MODERATE = NUMBERS.FOUR;
-
 const NETWORKS_LOW_PENALTY = NUMBERS.FIVE;
 const NETWORKS_HIGH_BONUS = NUMBERS.THREE;
 const NETWORK_HIGH_BONUS = NUMBERS.TWO;
-
 const DEX_HIGH_BONUS = NUMBERS.THREE;
-
 const SOCIAL_STRONG_BONUS = NUMBERS.THREE;
 
 const VOLUME_BONUS = {
-  NORMAL: 1,
-  STRONG: 3,
-  HIGH: 5
+  NORMAL: NUMBERS.ONE,
+  STRONG: NUMBERS.THREE,
+  HIGH: NUMBERS.FIVE
 };
 
 const MARKETCAP_BONUS = {
-  TINY: 1,
-  SMALL: 2,
-  LARGE: 3,
-  HIGH: 5,
-  VERY_HIGH: 7
+  TINY: NUMBERS.ONE,
+  SMALL: NUMBERS.TWO,
+  LARGE: NUMBERS.THREE,
+  HIGH: NUMBERS.FIVE,
+  VERY_HIGH: NUMBERS.SEVEN
 };
 
-const MAX_SCORE = 100;
-const MIN_SCORE = 0;
+const MAX_SCORE = NUMBERS.HUNDRED;
+const MIN_SCORE = NUMBERS.ZERO;
 
 const MARKETCAP_PENALTY = {
-  TINY: 12,
-  SMALL: 8,
-  MID: 4
+  TINY: NUMBERS.TWELVE,
+  SMALL: NUMBERS.EIGHT,
+  MID: NUMBERS.FOUR
 };
 
 const HOLDERS_PENALTY = {
-  VERY_LOW: 3,
-  LOW: 5,
-  MODERATE: 8,
-  HIGH: 10,
-  VERY_HIGH: 10,
-  EXTREME: 12
+  VERY_LOW: NUMBERS.THREE,
+  LOW: NUMBERS.FIVE,
+  MODERATE: NUMBERS.EIGHT,
+  HIGH: NUMBERS.TEN,
+  VERY_HIGH: NUMBERS.TEN,
+  EXTREME: NUMBERS.TWELVE
 };
 
 const AGE_PENALTY = {
-  NEW: 12,
-  WEEK: 8,
-  MONTH: 4
+  NEW: NUMBERS.TWELVE,
+  WEEK: NUMBERS.EIGHT,
+  MONTH: NUMBERS.FOUR
+};
+
+const LIQUIDITY_PENALTY = {
+  VERY_LOW: NUMBERS.THREE,
+  LOW: NUMBERS.FIVE,
+  MODERATE: NUMBERS.EIGHT,
+  HIGH: NUMBERS.TEN,
+  VERY_HIGH: NUMBERS.TEN,
+  EXTREME: NUMBERS.TWELVE
 };
 
 export const getEmptyRiskAnalysisParams = (): RiskAnalysisParams => ({
@@ -252,12 +205,12 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   // === 1. Holder Concentration ========================================
   let concentrationPenalty = 0;
   if (!top10HolderSupplyPercentage || top10HolderSupplyPercentage > 15)
-    concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * 0.5;
+    concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * NUMBERS.FIFTY_PERCENT;
   if (!top20HolderSupplyPercentage || top20HolderSupplyPercentage > 40)
-    concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * 0.25;
+    concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * NUMBERS.TWENTY_FIVE_PERCCENT;
   score -= Math.min(concentrationPenalty, MAX_CONCENTRATION_PENALTY);
 
-  if (whaleAccountsAvailable) score += 5;
+  if (whaleAccountsAvailable) score += NUMBERS.FIVE;
 
   // === 2. Verification ========================================
   if (!verifiedOnCoingecko) score -= NOT_VERIFIED_COINGECKO_PENALTY;
@@ -281,15 +234,15 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   if (impersonator) score -= Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
 
   // === 6. Liquidity ========================================
-  if (liquidityUSD < NUMBERS.THOUSAND) score -= 20;
+  if (liquidityUSD < NUMBERS.THOUSAND) score -= 21;
   else if (liquidityUSD < NUMBERS.TEN_THOUSAND) score -= 18;
   else if (liquidityUSD < NUMBERS.FIFTY_THOUSAND) score -= 15;
   else if (liquidityUSD < NUMBERS.HUNDRED_THOUSAND) score -= 12;
-  else if (liquidityUSD < NUMBERS.TWO_HUNDRED_THOUSAND) score -= 10;
-  else if (liquidityUSD < NUMBERS.FIVE_HUNDRED_THOUSAND) score -= 8;
-  else if (liquidityUSD < NUMBERS.MILLION) score -= 8;
-  else if (liquidityUSD < NUMBERS.TWO_MILLION) score -= 5;
-  else if (liquidityUSD < NUMBERS.FIVE_MILLION) score -= 3;
+  else if (liquidityUSD < NUMBERS.TWO_HUNDRED_THOUSAND) score -= 9;
+  else if (liquidityUSD < NUMBERS.FIVE_HUNDRED_THOUSAND) score -= 6;
+  else if (liquidityUSD < NUMBERS.MILLION) score -= 4;
+  else if (liquidityUSD < NUMBERS.TWO_MILLION) score -= 2;
+  else if (liquidityUSD < NUMBERS.FIVE_MILLION) score -= 1;
 
   // === 7. Market Cap Bonuses / Penalties (scaled) ========================================
   if (marketCap < NUMBERS.TWENTY_FIVE_THOUSAND) score -= MARKETCAP_PENALTY.TINY;
@@ -369,6 +322,9 @@ export const calculateRiskScoreBalanced = (token: RiskAnalysisParams): { totalSc
   };
 };
 
+/**
+ * TO-DO: Need to add check to detect honeyPot and RugPull using RPC and pool addresses
+ */
 export const calculateLightRiskScore = (
   token: RiskAnalysisParams
 ): {
