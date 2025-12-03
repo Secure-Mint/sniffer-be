@@ -1,3 +1,4 @@
+import { DetailedAnalysis } from "src/models";
 import { RISK_STATUS } from "./constants";
 import { GeckoTerminalTradeData } from "types";
 
@@ -80,3 +81,17 @@ export function calculateDailyVolume(data: GeckoTerminalTradeData): number {
 
   return Number(dailyVolume.toFixed(2));
 }
+
+export const sortAnalysisByRisk = (items: DetailedAnalysis[]) => {
+  const riskOrder: Record<RISK_STATUS, number> = {
+    [RISK_STATUS.EXTREME_RISK]: 6,
+    [RISK_STATUS.VERY_HIGH_RISK]: 5,
+    [RISK_STATUS.HIGH_RISK]: 4,
+    [RISK_STATUS.MODERATE_RISK]: 3,
+    [RISK_STATUS.LOW_RISK]: 2,
+    [RISK_STATUS.VERY_LOW_RISK]: 1,
+    [RISK_STATUS.INFO]: 0
+  };
+
+  return items.sort((a, b) => riskOrder[b.risk] - riskOrder[a.risk]);
+};

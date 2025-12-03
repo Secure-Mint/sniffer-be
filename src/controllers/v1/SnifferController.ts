@@ -6,7 +6,7 @@ import { SolanaService } from "../../services/SolanaService";
 import { TokenService } from "../../services/TokenService";
 import { SuccessResult } from "../../models";
 import { BadRequest, NotFound } from "@tsed/exceptions";
-import { calculateRiskScore, fixDecimals, STABLE_COIN } from "../../utils";
+import { calculateRiskScore, fixDecimals, sortAnalysisByRisk, STABLE_COIN } from "../../utils";
 import { ERROR_MESSAGE } from "../../utils";
 
 @Controller("/sniffer")
@@ -59,7 +59,7 @@ export class SnifferController {
         score,
         totalScore,
         risk,
-        detailedAnalysis
+        detailedAnalysis: sortAnalysisByRisk(detailedAnalysis)
       },
       SnifferModel
     );

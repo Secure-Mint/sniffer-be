@@ -189,17 +189,23 @@ export const calculateRiskScoreBalanced = ({
   // === 1. Holder Concentration ========================================
   let concentrationPenalty = 0;
 
-  // Top 10
-  if (!top10HolderSupplyPercentage && top10HolderSupplyPercentage !== 0) {
-    concentrationPenalty += 15 * NUMBERS.FIFTY_PERCENT; // worst-case baseline
+  if (!circulatingSupply) {
     detailedAnalysis.push({
-      detail: "Unable to determine distribution among the top 10 holders due to missing data, increasing uncertainty and potential risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No token in circulation which is a potential risk.",
+      risk: RISK_STATUS.EXTREME_RISK
+    });
+  }
+
+  if (!top10HolderSupplyPercentage) {
+    concentrationPenalty += 15 * NUMBERS.FIFTY_PERCENT;
+    detailedAnalysis.push({
+      detail: "No distribution among the top 10 holders due to missing data, increasing uncertainty and potential risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (top10HolderSupplyPercentage > 15) {
     concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 15) * NUMBERS.FIFTY_PERCENT;
     detailedAnalysis.push({
-      detail: `High Top 10 holder concentration: ${fixDecimals(top10HolderSupplyPercentage)}% of the supply is held by the top 10 wallets — increased manipulation risk.`,
+      detail: `High Top 10 holder concentration: ${fixDecimals(top10HolderSupplyPercentage)}% of the supply is held by the top 10 wallets, increased manipulation risk.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
@@ -210,16 +216,16 @@ export const calculateRiskScoreBalanced = ({
   }
 
   // Top 20
-  if (!top20HolderSupplyPercentage && top20HolderSupplyPercentage !== 0) {
+  if (!top20HolderSupplyPercentage) {
     concentrationPenalty += 40 * NUMBERS.TWENTY_FIVE_PERCCENT; // worst-case baseline
     detailedAnalysis.push({
-      detail: "Unable to determine distribution among the top 20 holders due to missing data, increasing uncertainty and potential risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No distribution among the top 20 holders due to missing data, increasing uncertainty and potential risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (top20HolderSupplyPercentage > 40) {
     concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * NUMBERS.TWENTY_FIVE_PERCCENT;
     detailedAnalysis.push({
-      detail: `High Top 20 holder concentration: ${fixDecimals(top20HolderSupplyPercentage)}% of the supply is held by the top 20 wallets — centralization risk.`,
+      detail: `High Top 20 holder concentration: ${fixDecimals(top20HolderSupplyPercentage)}% of the supply is held by the top 20 wallets, centralization risk.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
@@ -229,21 +235,19 @@ export const calculateRiskScoreBalanced = ({
     });
   }
 
-  // apply concentration penalty capped
   const appliedConcentrationPenalty = Math.min(concentrationPenalty, MAX_CONCENTRATION_PENALTY);
   score -= appliedConcentrationPenalty;
 
-  // Whale accounts
   if (whaleAccountsAvailable) {
     score += NUMBERS.FIVE;
     detailedAnalysis.push({
       detail: "Whale account activity detected, indicating interest from large holders (may imply liquidity or strategic support).",
-      risk: RISK_STATUS.INFO
+      risk: RISK_STATUS.LOW_RISK
     });
   } else {
     detailedAnalysis.push({
       detail: "No whale account activity detected.",
-      risk: RISK_STATUS.INFO
+      risk: RISK_STATUS.HIGH_RISK
     });
   }
 
@@ -258,7 +262,7 @@ export const calculateRiskScoreBalanced = ({
     score -= NOT_VERIFIED_COINGECKO_PENALTY;
     detailedAnalysis.push({
       detail: "Token is not verified on CoinGecko, reducing trust and public visibility.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   }
 
@@ -272,7 +276,7 @@ export const calculateRiskScoreBalanced = ({
     score -= NOT_VERIFIED_GECKOTERMINAL_PENALTY;
     detailedAnalysis.push({
       detail: "Token is not verified on Jupiter, limiting routing and aggregator trust.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   }
 
@@ -285,7 +289,7 @@ export const calculateRiskScoreBalanced = ({
     score -= SOCIALS_MISSING_PENALTY;
     detailedAnalysis.push({
       detail: "Project social accounts are missing or unverified, reducing credibility and community trust.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   }
 
@@ -298,7 +302,7 @@ export const calculateRiskScoreBalanced = ({
     score -= METADATA_NOT_VERIFIED_PENALTY;
     detailedAnalysis.push({
       detail: "Token metadata is not verified, increasing risk of misinformation or metadata tampering.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   }
 
@@ -338,7 +342,7 @@ export const calculateRiskScoreBalanced = ({
     score -= METADATA_NOT_IMMUTABLE_PENALTY;
     detailedAnalysis.push({
       detail: "Metadata is mutable — project can change token information after deployment (misinformation risk).",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.HIGH_RISK
     });
   }
 
@@ -346,12 +350,12 @@ export const calculateRiskScoreBalanced = ({
   if (impersonator) {
     score -= IMPERSONATOR_PENALTY;
     detailedAnalysis.push({
-      detail: "Token appears to impersonate another project — high scam/impersonation risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Token appears to impersonate another project, high scam/impersonation risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "No impersonation signs detected — identity looks legitimate.",
+      detail: "No impersonation signs detected, identity looks legitimate.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -361,12 +365,12 @@ export const calculateRiskScoreBalanced = ({
     const penalty = Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
     score -= penalty;
     detailedAnalysis.push({
-      detail: `${symbolCollisionCount} symbol collision(s) detected — increases confusion and impersonation risk.`,
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: `${symbolCollisionCount} symbol collision(s) detected, increases confusion and impersonation risk.`,
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Token symbol is unique — reduced confusion and impersonation risk.",
+      detail: "Token symbol is unique, reduced confusion and impersonation risk.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -375,8 +379,8 @@ export const calculateRiskScoreBalanced = ({
   if (isHoneyPot) {
     score -= HONEY_POT_PENALTY;
     detailedAnalysis.push({
-      detail: "Honeypot behavior detected — buyers may not be able to sell. Extremely high scam risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Honeypot behavior detected buyers may not be able to sell. Extremely high scam risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else {
     detailedAnalysis.push({
@@ -388,12 +392,12 @@ export const calculateRiskScoreBalanced = ({
   if (isRugPull) {
     score -= RUG_PUL_PENALTY;
     detailedAnalysis.push({
-      detail: "Rug-pull indicators present — liquidity drain or fraudulent behavior risk is high.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Rug-pull indicators present liquidity drain or fraudulent behavior risk is high.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "No rug-pull indicators detected.",
+      detail: "No rug pull indicators detected.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -403,19 +407,19 @@ export const calculateRiskScoreBalanced = ({
     score -= 21;
     detailedAnalysis.push({
       detail: "Liquidity is extremely low (< $1k), making trading unsafe and prone to manipulation.",
-      risk: RISK_STATUS.HIGH_RISK
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (liquidityUSD < NUMBERS.TEN_THOUSAND) {
     score -= 18;
     detailedAnalysis.push({
       detail: "Liquidity is very low ($1k–$10k), resulting in poor price stability and high slippage.",
-      risk: RISK_STATUS.HIGH_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else if (liquidityUSD < NUMBERS.FIFTY_THOUSAND) {
     score -= 15;
     detailedAnalysis.push({
       detail: "Liquidity is below recommended levels ($10k–$50k) for safe trading.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else if (liquidityUSD < NUMBERS.HUNDRED_THOUSAND) {
     score -= 12;
@@ -445,18 +449,18 @@ export const calculateRiskScoreBalanced = ({
     score -= 2;
     detailedAnalysis.push({
       detail: "Liquidity is strong ($1M–$2M).",
-      risk: RISK_STATUS.LOW_RISK
+      risk: RISK_STATUS.VERY_LOW_RISK
     });
   } else if (liquidityUSD < NUMBERS.FIVE_MILLION) {
     score -= 1;
     detailedAnalysis.push({
       detail: "Liquidity is very strong ($2M–$5M).",
-      risk: RISK_STATUS.LOW_RISK
+      risk: RISK_STATUS.VERY_LOW_RISK
     });
   } else {
     detailedAnalysis.push({
       detail: "Liquidity is excellent (> $5M), supporting stable trading with minimal slippage.",
-      risk: RISK_STATUS.LOW_RISK
+      risk: RISK_STATUS.VERY_LOW_RISK
     });
   }
 
@@ -465,32 +469,53 @@ export const calculateRiskScoreBalanced = ({
     score -= MARKETCAP_PENALTY.TINY;
     detailedAnalysis.push({
       detail: "Market cap is extremely low (< $25k), typical of very early-stage or high-risk tokens.",
-      risk: RISK_STATUS.HIGH_RISK
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (marketCap < NUMBERS.HUNDRED_THOUSAND) {
     score -= MARKETCAP_PENALTY.SMALL;
     detailedAnalysis.push({
       detail: "Market cap is small ($25k–$100k), indicating early stage and increased volatility.",
-      risk: RISK_STATUS.MODERATE_RISK
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else if (marketCap < NUMBERS.FIVE_HUNDRED_THOUSAND) {
     score -= MARKETCAP_PENALTY.MID;
     detailedAnalysis.push({
       detail: "Market cap is moderate ($100k–$500k) with typical early-stage volatility.",
-      risk: RISK_STATUS.MODERATE_RISK
-    });
-  } else {
-    detailedAnalysis.push({
-      detail: `Market cap is ${marketCap >= NUMBERS.TWENTY_MILLION ? "large" : "growing"}, improving credibility.`,
-      risk: RISK_STATUS.LOW_RISK
+      risk: RISK_STATUS.HIGH_RISK
     });
   }
 
-  if (marketCap > NUMBERS.FIFTY_MILLION) score += MARKETCAP_BONUS.VERY_HIGH;
-  else if (marketCap > NUMBERS.TWENTY_MILLION) score += MARKETCAP_BONUS.HIGH;
-  else if (marketCap > NUMBERS.TEN_MILLION) score += MARKETCAP_BONUS.LARGE;
-  else if (marketCap > NUMBERS.FIVE_MILLION) score += MARKETCAP_BONUS.SMALL;
-  else if (marketCap > NUMBERS.MILLION) score += MARKETCAP_BONUS.TINY;
+  if (marketCap > NUMBERS.FIFTY_MILLION) {
+    score += MARKETCAP_BONUS.VERY_HIGH;
+    detailedAnalysis.push({
+      detail: `Market cap is huge, improving credibility.`,
+      risk: RISK_STATUS.VERY_LOW_RISK
+    });
+  } else if (marketCap > NUMBERS.TWENTY_MILLION) {
+    score += MARKETCAP_BONUS.HIGH;
+    detailedAnalysis.push({
+      detail: `Market cap is strong, showing solid investor confidence.`,
+      risk: RISK_STATUS.VERY_LOW_RISK
+    });
+  } else if (marketCap > NUMBERS.TEN_MILLION) {
+    score += MARKETCAP_BONUS.LARGE;
+    detailedAnalysis.push({
+      detail: `Market cap is healthy, indicating steady growth and activity.`,
+      risk: RISK_STATUS.LOW_RISK
+    });
+  } else if (marketCap > NUMBERS.FIVE_MILLION) {
+    score += MARKETCAP_BONUS.SMALL;
+    detailedAnalysis.push({
+      detail: `Market cap is decent, suggesting an emerging but stable project.`,
+      risk: RISK_STATUS.LOW_RISK
+    });
+  } else if (marketCap > NUMBERS.MILLION) {
+    score += MARKETCAP_BONUS.TINY;
+    detailedAnalysis.push({
+      detail: `Market cap is modest, showing early-stage traction.`,
+      risk: RISK_STATUS.MODERATE_RISK
+    });
+  }
 
   // === 9. Volume Bonuses / Penalties (scaled) ========================================
   if (!isStableCoin) {
