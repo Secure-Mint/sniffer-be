@@ -189,13 +189,6 @@ export const calculateRiskScoreBalanced = ({
   // === 1. Holder Concentration ========================================
   let concentrationPenalty = 0;
 
-  if (!circulatingSupply) {
-    detailedAnalysis.push({
-      detail: "No token in circulation which is a potential risk.",
-      risk: RISK_STATUS.EXTREME_RISK
-    });
-  }
-
   if (!top10HolderSupplyPercentage) {
     concentrationPenalty += 15 * NUMBERS.FIFTY_PERCENT;
     detailedAnalysis.push({
@@ -310,12 +303,12 @@ export const calculateRiskScoreBalanced = ({
   if (!isStableCoin && mintAuthorityAvailable) {
     score -= MINT_AUTHORITY_PENALTY;
     detailedAnalysis.push({
-      detail: "Mint authority is enabled — additional tokens can be minted (dilution / rug risk).",
+      detail: "Mint authority is enabled, additional tokens can be minted (dilution / rug risk).",
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Mint authority is disabled or irrelevant for stablecoins — no additional minting risk.",
+      detail: "Mint authority is disabled or irrelevant for stablecoins, no additional minting risk.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -323,25 +316,25 @@ export const calculateRiskScoreBalanced = ({
   if (!isStableCoin && freezeAuthorityAvailable) {
     score -= FREEZE_AUTHORITY_PENALTY;
     detailedAnalysis.push({
-      detail: "Freeze authority is active — wallets could be frozen (centralized control risk).",
+      detail: "Freeze authority is active, wallets could be frozen (centralized control risk).",
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Freeze authority is disabled or irrelevant for stablecoins — no wallet-freezing risk.",
+      detail: "Freeze authority is disabled or irrelevant for stablecoins, no wallet-freezing risk.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
 
   if (immutableMetadata) {
     detailedAnalysis.push({
-      detail: "Metadata is immutable — token information cannot be changed after deployment.",
+      detail: "Metadata is immutable, token information cannot be changed after deployment.",
       risk: RISK_STATUS.LOW_RISK
     });
   } else {
     score -= METADATA_NOT_IMMUTABLE_PENALTY;
     detailedAnalysis.push({
-      detail: "Metadata is mutable — project can change token information after deployment (misinformation risk).",
+      detail: "Metadata is mutable, project can change token information after deployment (misinformation risk).",
       risk: RISK_STATUS.HIGH_RISK
     });
   }
@@ -361,18 +354,20 @@ export const calculateRiskScoreBalanced = ({
   }
 
   // === 5. Symbol Collisions ========================================
-  if (symbolCollisionCount > 0) {
-    const penalty = Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
-    score -= penalty;
-    detailedAnalysis.push({
-      detail: `${symbolCollisionCount} symbol collision(s) detected, increases confusion and impersonation risk.`,
-      risk: RISK_STATUS.HIGH_RISK
-    });
-  } else {
-    detailedAnalysis.push({
-      detail: "Token symbol is unique, reduced confusion and impersonation risk.",
-      risk: RISK_STATUS.LOW_RISK
-    });
+  if (!isStableCoin) {
+    if (symbolCollisionCount > 0) {
+      const penalty = Math.min(symbolCollisionCount * SYMBOL_COLLISION_PENALTY, SYMBOL_COLLISION_PENALTY);
+      score -= penalty;
+      detailedAnalysis.push({
+        detail: `${symbolCollisionCount} symbol collision(s) detected, increases confusion and impersonation risk.`,
+        risk: RISK_STATUS.HIGH_RISK
+      });
+    } else {
+      detailedAnalysis.push({
+        detail: "Token symbol is unique, reduced confusion and impersonation risk.",
+        risk: RISK_STATUS.LOW_RISK
+      });
+    }
   }
 
   // === 6. Honey Pot / Rug Pull ========================================
@@ -515,11 +510,23 @@ export const calculateRiskScoreBalanced = ({
       detail: `Market cap is modest, showing early-stage traction.`,
       risk: RISK_STATUS.MODERATE_RISK
     });
+  } else if (marketCap > NUMBERS.FIVE_HUNDRED_THOUSAND) {
+    score += MARKETCAP_BONUS.TINY;
+    detailedAnalysis.push({
+      detail: `Market cap is modest, showing early-stage traction.`,
+      risk: RISK_STATUS.MODERATE_RISK
+    });
   }
 
   // === 9. Volume Bonuses / Penalties (scaled) ========================================
   if (!isStableCoin) {
-    if (dailyVolume < NUMBERS.TWO_THOUSAND) {
+    if (!dailyVolume) {
+      score -= VOLUME_PENALTY_LOW;
+      detailedAnalysis.push({
+        detail: "Trading volume is extremely low ($0), indicating low interest or an abandoned project.",
+        risk: RISK_STATUS.VERY_HIGH_RISK
+      });
+    } else if (dailyVolume < NUMBERS.TWO_THOUSAND) {
       score -= VOLUME_PENALTY_LOW;
       detailedAnalysis.push({
         detail: "Trading volume is extremely low (< $2k), indicating low interest or an abandoned project.",
@@ -562,11 +569,6 @@ export const calculateRiskScoreBalanced = ({
         risk: RISK_STATUS.INFO
       });
     }
-  } else {
-    detailedAnalysis.push({
-      detail: "Stablecoin detected — volume/price volatility expectations differ.",
-      risk: RISK_STATUS.INFO
-    });
   }
 
   // === 10. Activity ========================================
@@ -574,12 +576,12 @@ export const calculateRiskScoreBalanced = ({
     if (!recentActivity || txCount24h === 0) {
       score -= NO_ACTIVITY_24H_PENALTY;
       detailedAnalysis.push({
-        detail: "No recent on-chain activity or zero transactions in the last 24h — project may be inactive or abandoned.",
-        risk: RISK_STATUS.HIGH_RISK
+        detail: "No recent on-chain activity or zero transactions in the last 24h, project may be inactive or abandoned.",
+        risk: RISK_STATUS.VERY_HIGH_RISK
       });
     } else {
       detailedAnalysis.push({
-        detail: `Recent activity detected: ${txCount24h} tx in the last 24h.`,
+        detail: `Recent activity detected: ${txCount24h} transfers in the last 24h.`,
         risk: RISK_STATUS.LOW_RISK
       });
     }
@@ -587,13 +589,13 @@ export const calculateRiskScoreBalanced = ({
     if (uniqueBuyers24h < uniqueSellers24h) {
       score -= BUYER_SELLER_IMBALANCE;
       detailedAnalysis.push({
-        detail: "More sellers than buyers in the last 24h — downward pressure or loss of confidence.",
+        detail: "More sellers than buyers in the last 24h, downward pressure or loss of confidence.",
         risk: RISK_STATUS.MODERATE_RISK
       });
     } else {
       detailedAnalysis.push({
         detail: "Buyer/seller balance in the last 24h looks healthy.",
-        risk: RISK_STATUS.INFO
+        risk: RISK_STATUS.LOW_RISK
       });
     }
   }
@@ -602,7 +604,7 @@ export const calculateRiskScoreBalanced = ({
   if (totalHolders < NUMBERS.TWO_THOUSAND) {
     score -= HOLDERS_PENALTY.EXTREME;
     detailedAnalysis.push({
-      detail: `Very low number of holders (${totalHolders}) — typical of new or highly speculative tokens.`,
+      detail: `Very low number of holders (${totalHolders}), typical of new or highly speculative tokens.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else if (totalHolders < NUMBERS.FIVE_THOUSAND) {
@@ -640,13 +642,13 @@ export const calculateRiskScoreBalanced = ({
   const ageDays = firstOnchainActivity ? (Date.now() - new Date(firstOnchainActivity).getTime()) / 86400000 : Infinity;
   if (!firstOnchainActivity) {
     detailedAnalysis.push({
-      detail: "First on-chain activity date missing — cannot assess token age.",
+      detail: "First on-chain activity date missing, cannot assess token age.",
       risk: RISK_STATUS.MODERATE_RISK
     });
   } else if (ageDays < 3) {
     score -= AGE_PENALTY.NEW;
     detailedAnalysis.push({
-      detail: `Token is extremely new (<3 days). Age: ${Math.floor(ageDays)} days — high volatility/scam risk.`,
+      detail: `Token is extremely new (<3 days). Age: ${Math.floor(ageDays)} days, high volatility/scam risk.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else if (ageDays < 7) {
@@ -674,7 +676,7 @@ export const calculateRiskScoreBalanced = ({
     if (supplyRatio > 1.5) {
       score -= SUPPLY_PENALTY_HIGH;
       detailedAnalysis.push({
-        detail: `Total supply (${totalSupply}) significantly exceeds circulating supply (${circulatingSupply}) — supply ratio ${supplyRatio.toFixed(
+        detail: `Total supply (${totalSupply}) significantly exceeds circulating supply (${circulatingSupply}), supply ratio ${supplyRatio.toFixed(
           2
         )} indicates high inflation/dilution risk.`,
         risk: RISK_STATUS.HIGH_RISK
@@ -682,10 +684,10 @@ export const calculateRiskScoreBalanced = ({
     } else if (supplyRatio > 1.2) {
       score -= SUPPLY_PENALTY_MODERATE;
       detailedAnalysis.push({
-        detail: `Moderate difference between total and circulating supply — supply ratio ${supplyRatio.toFixed(
+        detail: `Moderate difference between total and circulating supply, supply ratio ${supplyRatio.toFixed(
           2
         )} may indicate future unlocking or inflation.`,
-        risk: RISK_STATUS.MODERATE_RISK
+        risk: RISK_STATUS.HIGH_RISK
       });
     } else {
       detailedAnalysis.push({
@@ -696,8 +698,8 @@ export const calculateRiskScoreBalanced = ({
   } else {
     score -= SUPPLY_PENALTY_HIGH;
     detailedAnalysis.push({
-      detail: "No circulating supply reported — extremely high risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No circulating supply reported, extremely high risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   }
 
@@ -706,13 +708,13 @@ export const calculateRiskScoreBalanced = ({
     if (networksCount <= 1) {
       score -= NETWORK_LOW;
       detailedAnalysis.push({
-        detail: `Token is available on only ${networksCount} network(s) — limited exposure and higher isolation risk.`,
+        detail: `Token is available on only ${networksCount} network(s), limited exposure and higher isolation risk.`,
         risk: RISK_STATUS.MODERATE_RISK
       });
     } else if (networksCount >= 3) {
       score += NETWORK_HIGH_BONUS;
       detailedAnalysis.push({
-        detail: `Token operates across ${networksCount} networks — improved distribution and reliability.`,
+        detail: `Token operates across ${networksCount} networks, improved distribution and reliability.`,
         risk: RISK_STATUS.LOW_RISK
       });
     } else {
@@ -723,22 +725,28 @@ export const calculateRiskScoreBalanced = ({
     }
   }
 
-  if (dexCount <= 1) {
+  if (dexCount < 1) {
     score -= DEX_LOW;
     detailedAnalysis.push({
-      detail: `Token is listed on ${dexCount} DEX(s) — limited liquidity access.`,
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: `Token is listed on ${dexCount} DEX(s), limited liquidity access.`,
+      risk: RISK_STATUS.VERY_HIGH_RISK
+    });
+  } else if (dexCount === 1) {
+    score -= DEX_LOW;
+    detailedAnalysis.push({
+      detail: `Token is listed on ${dexCount} DEX(s), limited liquidity access.`,
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else if (dexCount >= 5) {
     score += DEX_HIGH_BONUS;
     detailedAnalysis.push({
-      detail: `Token is listed on ${dexCount} DEXs — broad access and improved liquidity depth.`,
-      risk: RISK_STATUS.LOW_RISK
+      detail: `Token is listed on ${dexCount} DEXs, broad access and improved liquidity depth.`,
+      risk: RISK_STATUS.MODERATE_RISK
     });
   } else {
     detailedAnalysis.push({
       detail: `Token is listed on ${dexCount} DEX(s).`,
-      risk: RISK_STATUS.INFO
+      risk: RISK_STATUS.VERY_LOW_RISK
     });
   }
 
@@ -747,46 +755,34 @@ export const calculateRiskScoreBalanced = ({
   if (socialCount === 0) {
     score -= SOCIAL_NONE;
     detailedAnalysis.push({
-      detail: "No social channels found — severely harming credibility and communication.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No social channels found, severely harming credibility and communication.",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else if (socialCount === 1) {
     score -= SOCIAL_FEW;
     detailedAnalysis.push({
-      detail: "Minimal social presence detected — project visibility is limited.",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Minimal social presence detected, project visibility is limited.",
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else if (socialCount >= 3) {
     score += SOCIAL_STRONG_BONUS;
     detailedAnalysis.push({
-      detail: `Strong social presence across ${socialCount} platforms — boosts trust and engagement.`,
-      risk: RISK_STATUS.LOW_RISK
+      detail: `Strong social presence across ${socialCount} platforms, boosts trust and engagement.`,
+      risk: RISK_STATUS.MODERATE_RISK
     });
   } else {
     detailedAnalysis.push({
       detail: `Moderate social presence across ${socialCount} platforms.`,
-      risk: RISK_STATUS.INFO
+      risk: RISK_STATUS.LOW_RISK
     });
   }
 
   // === 16. Stable coin bonus ========================================
   if (isStableCoin) {
-    if (score <= 70) {
-      score += STABLE_COIN_BONUS;
-      detailedAnalysis.push({
-        detail: "Token identified as a stablecoin; baseline risk reduced due to expected price stability.",
-        risk: RISK_STATUS.LOW_RISK
-      });
-    } else {
-      detailedAnalysis.push({
-        detail: "Stablecoin detected; no additional bonus applied because score is already high.",
-        risk: RISK_STATUS.INFO
-      });
-    }
-  } else {
+    if (score <= 70) score += STABLE_COIN_BONUS;
     detailedAnalysis.push({
-      detail: "Token is not a stablecoin.",
-      risk: RISK_STATUS.INFO
+      detail: "Token identified as a stablecoin; baseline risk reduced due to expected price stability.",
+      risk: RISK_STATUS.VERY_LOW_RISK
     });
   }
 
@@ -832,16 +828,16 @@ export const calculateLightRiskScore = ({
   // === 1. Holders Concentration ========================================
   let concentrationPenalty = 0;
 
-  if (!top10HolderSupplyPercentage && top10HolderSupplyPercentage !== 0) {
-    concentrationPenalty += Math.abs(20) * 0.5;
+  if (!top10HolderSupplyPercentage) {
+    concentrationPenalty += NUMBERS.TEN;
     detailedAnalysis.push({
-      detail: "Top 10 holder percentage missing — cannot assess concentration for top 10 holders.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Top 10 holder percentage missing, cannot assess concentration for top 10 holders.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (top10HolderSupplyPercentage > 15) {
     concentrationPenalty += Math.abs(top10HolderSupplyPercentage - 20) * 0.5;
     detailedAnalysis.push({
-      detail: `High Top 10 holder concentration: ${fixDecimals(top10HolderSupplyPercentage)}% held by top 10 — elevated risk.`,
+      detail: `High Top 10 holder concentration: ${fixDecimals(top10HolderSupplyPercentage)}% held by top 10, elevated risk.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
@@ -851,16 +847,16 @@ export const calculateLightRiskScore = ({
     });
   }
 
-  if (!top20HolderSupplyPercentage && top20HolderSupplyPercentage !== 0) {
-    concentrationPenalty += Math.abs(40) * 0.25;
+  if (!top20HolderSupplyPercentage) {
+    concentrationPenalty += NUMBERS.TEN;
     detailedAnalysis.push({
-      detail: "Top 20 holder percentage missing — cannot assess concentration for top 20 holders.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Top 20 holder percentage missing, cannot assess concentration for top 20 holders.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else if (top20HolderSupplyPercentage > 40) {
     concentrationPenalty += Math.abs(top20HolderSupplyPercentage - 40) * 0.25;
     detailedAnalysis.push({
-      detail: `High Top 20 holder concentration: ${fixDecimals(top20HolderSupplyPercentage)}% held by top 20 — elevated risk.`,
+      detail: `High Top 20 holder concentration: ${fixDecimals(top20HolderSupplyPercentage)}% held by top 20, elevated risk.`,
       risk: RISK_STATUS.HIGH_RISK
     });
   } else {
@@ -875,8 +871,8 @@ export const calculateLightRiskScore = ({
   if (whaleAccountsAvailable) {
     score += NUMBERS.FIVE;
     detailedAnalysis.push({
-      detail: "Whale accounts present — may indicate liquidity or large-holder interest.",
-      risk: RISK_STATUS.INFO
+      detail: "Whale accounts present, indicate liquidity or large-holder interest.",
+      risk: RISK_STATUS.MODERATE_RISK
     });
   } else {
     detailedAnalysis.push({
@@ -889,12 +885,12 @@ export const calculateLightRiskScore = ({
   if (mintAuthorityAvailable) {
     score -= MINT_AUTHORITY_PENALTY;
     detailedAnalysis.push({
-      detail: "Mint authority enabled — risk of token inflation or unexpected minting.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Mint authority enabled, risk of token inflation or unexpected minting.",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Mint authority disabled — no minting risk detected.",
+      detail: "Mint authority disabled, no minting risk detected.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -902,12 +898,12 @@ export const calculateLightRiskScore = ({
   if (freezeAuthorityAvailable) {
     score -= FREEZE_AUTHORITY_PENALTY;
     detailedAnalysis.push({
-      detail: "Freeze authority enabled — possibility of wallet freezes (centralized control).",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Freeze authority enabled, possibility of wallet freezes (centralized control).",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Freeze authority disabled — no wallet-freezing risk.",
+      detail: "Freeze authority disabled, no wallet-freezing risk.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -915,12 +911,12 @@ export const calculateLightRiskScore = ({
   if (!immutableMetadata) {
     score -= NON_IMMUTABLE_METADATA_PENALTY;
     detailedAnalysis.push({
-      detail: "Metadata is mutable — can be changed after deployment (risk of misinformation).",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Metadata is mutable, can be changed after deployment (risk of misinformation).",
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Metadata is immutable — secure token info.",
+      detail: "Metadata is immutable, secure token info.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -929,8 +925,8 @@ export const calculateLightRiskScore = ({
   if (impersonator) {
     score -= IMPERSONATOR_PENALTY;
     detailedAnalysis.push({
-      detail: "Impersonation signs detected — very high scam risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "Impersonation signs detected, very high scam risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else {
     detailedAnalysis.push({
@@ -943,12 +939,12 @@ export const calculateLightRiskScore = ({
   if (!verifiedOnCoingecko) {
     score -= NOT_VERIFIED_COINGECKO_PENALTY;
     detailedAnalysis.push({
-      detail: "Not verified on CoinGecko — reduced public trust.",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Not verified on CoinGecko, reduced public trust.",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Verified on CoinGecko — improved visibility.",
+      detail: "Verified on CoinGecko, improved visibility.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -956,12 +952,12 @@ export const calculateLightRiskScore = ({
   if (!verifiedOnCoingeckoTerminal) {
     score -= NOT_VERIFIED_GECKOTERMINAL_PENALTY;
     detailedAnalysis.push({
-      detail: "Not verified on aggregators — reduced aggregator trust.",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Not verified on aggregators, reduced aggregator trust.",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Verified on aggregator / terminal — improved credibility.",
+      detail: "Verified on aggregator, improved credibility.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -969,12 +965,12 @@ export const calculateLightRiskScore = ({
   if (!socialsVerified) {
     score -= SOCIALS_MISSING_PENALTY;
     detailedAnalysis.push({
-      detail: "Socials not verified — reduced credibility.",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Socials not verified, reduced credibility.",
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Socials verified — good social proof.",
+      detail: "Socials verified, good social proof.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -982,12 +978,12 @@ export const calculateLightRiskScore = ({
   if (!metadataVerified) {
     score -= METADATA_NOT_VERIFIED_PENALTY;
     detailedAnalysis.push({
-      detail: "Metadata not verified — risk of incorrect token info.",
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: "Metadata not verified, risk of incorrect token info.",
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else {
     detailedAnalysis.push({
-      detail: "Metadata verified — authentic token information.",
+      detail: "Metadata verified, authentic token information.",
       risk: RISK_STATUS.LOW_RISK
     });
   }
@@ -996,19 +992,14 @@ export const calculateLightRiskScore = ({
   if (networksCount <= 1) {
     score -= NETWORKS_LOW_PENALTY;
     detailedAnalysis.push({
-      detail: `Token available on only ${networksCount} network(s) — limited exposure.`,
-      risk: RISK_STATUS.MODERATE_RISK
+      detail: `Token available on only ${networksCount} network, limited exposure.`,
+      risk: RISK_STATUS.HIGH_RISK
     });
   } else if (networksCount >= 3) {
     score += NETWORKS_HIGH_BONUS;
     detailedAnalysis.push({
-      detail: `Token available on ${networksCount} networks — good cross-chain presence.`,
-      risk: RISK_STATUS.LOW_RISK
-    });
-  } else {
-    detailedAnalysis.push({
-      detail: `Token available on ${networksCount} network(s).`,
-      risk: RISK_STATUS.INFO
+      detail: `Token available on ${networksCount} networks, good cross-chain presence.`,
+      risk: RISK_STATUS.MODERATE_RISK
     });
   }
 
@@ -1016,15 +1007,15 @@ export const calculateLightRiskScore = ({
   if (circulatingSupply <= 0 && totalSupply > 0) {
     score -= 10;
     detailedAnalysis.push({
-      detail: "No circulating supply reported while total supply exists — extremely high risk.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No circulating supply reported while total supply exists, extremely high risk.",
+      risk: RISK_STATUS.EXTREME_RISK
     });
   } else {
     const supplyRatio = totalSupply / (circulatingSupply || 1);
     if (supplyRatio > 1.5) {
       score -= 10;
       detailedAnalysis.push({
-        detail: `High supply inflation: total/circulating ratio ${supplyRatio.toFixed(2)} — dilution risk.`,
+        detail: `High supply inflation: total/circulating ratio ${supplyRatio.toFixed(2)}, dilution risk.`,
         risk: RISK_STATUS.HIGH_RISK
       });
     } else if (supplyRatio > 1.2) {
@@ -1045,8 +1036,8 @@ export const calculateLightRiskScore = ({
   if (!recentActivity) {
     score -= NO_RECENT_ACTIVITY_PENALTY;
     detailedAnalysis.push({
-      detail: "No recent on-chain activity detected — project may be abandoned or inactive.",
-      risk: RISK_STATUS.HIGH_RISK
+      detail: "No recent on-chain activity detected, project may be abandoned or inactive.",
+      risk: RISK_STATUS.VERY_HIGH_RISK
     });
   } else {
     detailedAnalysis.push({

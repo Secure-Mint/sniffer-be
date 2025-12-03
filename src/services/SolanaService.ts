@@ -326,7 +326,7 @@ export class SolanaService {
     let circulatingSupply = 0;
     let totalSupply = 0;
     let totalHolders = 0;
-    let networksCount = 0;
+    let networksCount = 1;
     let verifiedOnCoingecko = false;
     let verifiedOnCoingeckoTerminal = false;
     let verifiedOnJupiter = tokenInfo.jupiter_verified;

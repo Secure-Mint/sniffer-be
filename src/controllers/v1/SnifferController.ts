@@ -23,9 +23,6 @@ export class SnifferController {
     const tokenInfo = this.tokenService.parsedInfo(token);
     const sameSymbolTokens = await this.tokenService.findManyBySymbol(token.symbol);
     const impersonator = Boolean(sameSymbolTokens.length > 1 && !tokenInfo.coingecko_verified);
-
-    const isStableCoin = token.tags.includes(STABLE_COIN);
-
     const analysisParams = await this.solanaService.fetchTokenAnalysisParams(token);
     const { score, totalScore, risk, detailedAnalysis } = calculateRiskScore(analysisParams);
 
@@ -48,7 +45,7 @@ export class SnifferController {
         top20HolderSupplyPercentage: fixDecimals(analysisParams?.top20HolderSupplyPercentage || 0, 2),
         tags: token.tags,
         impersonator,
-        isStableCoin,
+        isStableCoin: analysisParams.isStableCoin,
         freezeAuthority: analysisParams?.freezeAuthority || null,
         freezeAuthorityAvailable: Boolean(analysisParams?.freezeAuthority),
         mintAuthority: analysisParams.mintAuthority || null,
