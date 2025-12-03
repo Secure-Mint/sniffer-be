@@ -49,6 +49,7 @@ export const NUMBERS = {
   HUNDRED: 100,
   TWENTY_FIVE: 25,
   TWENTY: 20,
+  FIFTEEN: 20,
   TWELVE: 12,
   TEN: 10,
   EIGHT: 8,

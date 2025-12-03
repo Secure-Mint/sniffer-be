@@ -1,3 +1,4 @@
+import { DetailedAnalysis } from "./src/models";
 import { RISK_STATUS, YES_NO } from "./src/utils";
 
 // export interface SPLToken {
@@ -455,4 +456,11 @@ export interface RiskAnalysisParams {
   github: string | null;
   socialsVerified: boolean;
   metadataVerified: boolean;
+}
+
+export interface RiskAnalysisResult {
+  totalScore: number;
+  score: number;
+  risk: RISK_STATUS;
+  detailedAnalysis: DetailedAnalysis[];
 }

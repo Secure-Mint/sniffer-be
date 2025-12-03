@@ -28,7 +28,6 @@ import { JupiterService } from "./JupiterService";
 
 @Injectable()
 export class SolanaService {
-  // public SPLTokensURL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
   private ACCOUNT_STATE_FROZEN = 2; // Frozen state byte value
   private ACCOUNT_STATE_OFFSET = 108; // State field offset in AccountLayout
   private ACCOUNT_SIZE = 165; // Size of a standard Token Account
@@ -329,7 +328,7 @@ export class SolanaService {
     let networksCount = 1;
     let verifiedOnCoingecko = false;
     let verifiedOnCoingeckoTerminal = false;
-    let verifiedOnJupiter = tokenInfo.jupiter_verified;
+    let verifiedOnJupiter = tokenInfo.jupiter_verified || false;
     let top10HolderSupplyPercentage = 0;
     let top20HolderSupplyPercentage = 0;
     let freezeAuthority = onchainMetadata?.data.freezeAuthority || null;
