@@ -1,7 +1,7 @@
 import { CollectionOf, Enum, Nullable, Required } from "@tsed/schema";
 import { RISK_STATUS } from "../utils";
 
-export class DetailedAnalysis {
+export class AnalysisReport {
   @Required() @Enum(RISK_STATUS) public readonly risk: RISK_STATUS;
   @Required() public readonly detail: string;
 }
@@ -32,5 +32,5 @@ export class SnifferModel {
   @Required() public readonly totalScore: number;
   @Required() @Enum(RISK_STATUS) public readonly risk: RISK_STATUS;
   @Required() @CollectionOf(String) public readonly tags: string[];
-  @Required() @CollectionOf(DetailedAnalysis) public readonly detailedAnalysis: DetailedAnalysis[];
+  @Required() @CollectionOf(AnalysisReport) public readonly detailedAnalysis: AnalysisReport[];
 }

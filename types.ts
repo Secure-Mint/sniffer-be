@@ -1,4 +1,4 @@
-import { DetailedAnalysis } from "./src/models";
+import { AnalysisReport } from "./src/models";
 import { RISK_STATUS, YES_NO } from "./src/utils";
 
 // export interface SPLToken {
@@ -462,5 +462,5 @@ export interface RiskAnalysisResult {
   totalScore: number;
   score: number;
   risk: RISK_STATUS;
-  detailedAnalysis: DetailedAnalysis[];
+  detailedAnalysis: AnalysisReport[];
 }

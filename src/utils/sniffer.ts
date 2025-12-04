@@ -1,18 +1,15 @@
 import { RiskAnalysisParams, RiskAnalysisResult } from "types";
 import { NUMBERS, RISK_STATUS } from "../utils/constants";
 import { fixDecimals, getRiskStatus } from ".";
-import { DetailedAnalysis } from "../models";
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 const COINGECKO_PENALTY = NUMBERS.FIVE;
-const GECKOTERMINAL_PENALTY = NUMBERS.FIVE;
 const JUPITER_PENALTY = NUMBERS.FIVE;
 const RADIUM_PENALTY = NUMBERS.FIVE;
 const VOLUME_PENALTY_LOW = NUMBERS.EIGHT;
 const VOLUME_PENALTY_MID = NUMBERS.FIVE;
 const VOLUME_PENALTY_HIGH = NUMBERS.THREE;
-const STABLE_COIN_BONUS = NUMBERS.TEN;
 const MAX_CONCENTRATION_PENALTY = NUMBERS.TWENTY;
 const SOCIALS_MISSING_PENALTY = NUMBERS.FIVE;
 const METADATA_NOT_VERIFIED_PENALTY = NUMBERS.FIVE;
@@ -194,8 +191,8 @@ const holdersPenalty = (
   result.score -= Math.min(penalty, MAX_CONCENTRATION_PENALTY);
 };
 
-const whaleScore = (result: RiskAnalysisResult, { top20HolderSupplyPercentage }: RiskAnalysisParams) => {
-  if (!top20HolderSupplyPercentage) {
+const whaleScore = (result: RiskAnalysisResult, { whaleAccountsAvailable }: RiskAnalysisParams) => {
+  if (whaleAccountsAvailable) {
     result.score += NUMBERS.FIVE;
     result.detailedAnalysis.push({
       detail: "Whale account activity detected, indicating interest from large holders (may imply liquidity or strategic support).",
@@ -778,6 +775,20 @@ const socialPresenceScore = (result: RiskAnalysisResult, { twitter, telegram, di
   }
 };
 
+const stableCoinBonus = (result: RiskAnalysisResult, { isStableCoin, marketCap }: RiskAnalysisParams) => {
+  if (isStableCoin && marketCap > 0) {
+    if (result.score <= 60) result.score += NUMBERS.TEN;
+    else if (result.score <= 65) result.score += NUMBERS.EIGHT;
+    else if (result.score <= 70) result.score += NUMBERS.SIX;
+    else if (result.score <= 75) result.score += NUMBERS.FIVE;
+
+    result.detailedAnalysis.push({
+      detail: "Token identified as a stablecoin; baseline risk reduced due to expected price stability.",
+      risk: RISK_STATUS.VERY_LOW_RISK
+    });
+  }
+};
+
 export const calcRiskScoreBalanced = (params: RiskAnalysisParams): RiskAnalysisResult => {
   const result: RiskAnalysisResult = {
     score: MAX_SCORE,
@@ -841,13 +852,7 @@ export const calcRiskScoreBalanced = (params: RiskAnalysisParams): RiskAnalysisR
   socialPresenceScore(result, params);
 
   // === 16. Stable coin bonus ========================================
-  if (params.isStableCoin) {
-    if (result.score <= 70) result.score += STABLE_COIN_BONUS;
-    result.detailedAnalysis.push({
-      detail: "Token identified as a stablecoin; baseline risk reduced due to expected price stability.",
-      risk: RISK_STATUS.VERY_LOW_RISK
-    });
-  }
+  stableCoinBonus(result, params);
 
   // === 17. Final clamp and return ========================================
   result.score = clamp(Math.round(result.score), MIN_SCORE, MAX_SCORE);
